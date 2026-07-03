@@ -1,0 +1,155 @@
+package com.smarteval.evaluatoruser;
+
+import com.smarteval.auth.AuthService;
+import com.smarteval.common.BusinessException;
+import com.smarteval.common.PageResponse;
+import com.smarteval.department.Department;
+import com.smarteval.department.DepartmentRepository;
+import com.smarteval.evaluatoruser.dto.BatchGenerateEvaluatorRequest;
+import com.smarteval.evaluatoruser.dto.BatchGenerateEvaluatorResponse;
+import com.smarteval.evaluatoruser.dto.EvaluatorUserListItem;
+import com.smarteval.evaluatoruser.dto.ResetEvaluatorPasswordResponse;
+import com.smarteval.evaluatoruser.dto.SetEnabledRequest;
+import com.smarteval.security.CurrentUser;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class EvaluatorUserService {
+    private static final String DEPARTMENT_NOT_FOUND_MESSAGE = "部门不存在";
+    private static final String EVALUATOR_USER_NOT_FOUND_MESSAGE = "考评用户不存在";
+
+    private final EvaluatorUserRepository evaluatorUserRepository;
+    private final DepartmentRepository departmentRepository;
+    private final RandomCredentialGenerator randomCredentialGenerator;
+    private final AuthService authService;
+
+    public EvaluatorUserService(
+            EvaluatorUserRepository evaluatorUserRepository,
+            DepartmentRepository departmentRepository,
+            RandomCredentialGenerator randomCredentialGenerator,
+            AuthService authService
+    ) {
+        this.evaluatorUserRepository = evaluatorUserRepository;
+        this.departmentRepository = departmentRepository;
+        this.randomCredentialGenerator = randomCredentialGenerator;
+        this.authService = authService;
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<EvaluatorUserListItem> list(
+            CurrentUser currentUser,
+            int page,
+            int pageSize,
+            Long departmentId,
+            Boolean submitted,
+            Boolean enabled
+    ) {
+        authService.requireEnabledAdmin(currentUser);
+
+        var evaluatorUsers = evaluatorUserRepository.search(
+                departmentId,
+                submitted,
+                enabled,
+                PageRequest.of(page - 1, pageSize, Sort.by(Sort.Direction.ASC, "id"))
+        );
+        return new PageResponse<>(
+                evaluatorUsers.getContent().stream().map(this::toListItem).toList(),
+                evaluatorUsers.getTotalElements(),
+                page,
+                pageSize
+        );
+    }
+
+    @Transactional
+    public BatchGenerateEvaluatorResponse batchGenerate(CurrentUser currentUser, BatchGenerateEvaluatorRequest request) {
+        authService.requireEnabledAdmin(currentUser);
+
+        Department department = getRequiredDepartment(request.departmentId());
+        String departmentCode = "D%03d".formatted(department.getId());
+        long nextSequence = 1L;
+        List<EvaluatorUser> createdUsers = new ArrayList<>();
+        for (int index = 0; index < request.count(); index++) {
+            String username;
+            do {
+                username = "%s-%04d".formatted(departmentCode, nextSequence++);
+            } while (evaluatorUserRepository.existsByUsername(username));
+
+            createdUsers.add(new EvaluatorUser(
+                    username,
+                    randomCredentialGenerator.password(),
+                    department,
+                    true
+            ));
+        }
+
+        List<EvaluatorUserListItem> items = evaluatorUserRepository.saveAll(createdUsers)
+                .stream()
+                .map(this::toListItem)
+                .toList();
+        return new BatchGenerateEvaluatorResponse(items.size(), items);
+    }
+
+    @Transactional
+    public ResetEvaluatorPasswordResponse resetPassword(CurrentUser currentUser, Long id) {
+        authService.requireEnabledAdmin(currentUser);
+
+        EvaluatorUser evaluatorUser = getRequiredEvaluatorUser(id);
+        String passwordPlain = randomCredentialGenerator.password();
+        evaluatorUser.updatePasswordPlain(passwordPlain);
+        return new ResetEvaluatorPasswordResponse(passwordPlain);
+    }
+
+    @Transactional
+    public EvaluatorUserListItem setEnabled(CurrentUser currentUser, Long id, SetEnabledRequest request) {
+        authService.requireEnabledAdmin(currentUser);
+
+        EvaluatorUser evaluatorUser = getRequiredEvaluatorUser(id);
+        evaluatorUser.updateEnabled(request.enabled());
+        return toListItem(evaluatorUser);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EvaluatorUserListItem> listForPrint(
+            CurrentUser currentUser,
+            Long departmentId,
+            Boolean submitted,
+            Boolean enabled
+    ) {
+        authService.requireEnabledAdmin(currentUser);
+
+        return evaluatorUserRepository.findForPrint(departmentId, submitted, enabled)
+                .stream()
+                .map(this::toListItem)
+                .toList();
+    }
+
+    private Department getRequiredDepartment(Long id) {
+        return departmentRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(DEPARTMENT_NOT_FOUND_MESSAGE));
+    }
+
+    private EvaluatorUser getRequiredEvaluatorUser(Long id) {
+        return evaluatorUserRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(EVALUATOR_USER_NOT_FOUND_MESSAGE));
+    }
+
+    private EvaluatorUserListItem toListItem(EvaluatorUser evaluatorUser) {
+        return new EvaluatorUserListItem(
+                evaluatorUser.getId(),
+                evaluatorUser.getUsername(),
+                evaluatorUser.getPasswordPlain(),
+                evaluatorUser.getDepartment().getId(),
+                evaluatorUser.getDepartment().getName(),
+                evaluatorUser.isEnabled(),
+                evaluatorUser.isSubmitted(),
+                evaluatorUser.getSubmittedAt() == null ? null : evaluatorUser.getSubmittedAt().toInstant(),
+                evaluatorUser.getCreatedAt().toInstant()
+        );
+    }
+}

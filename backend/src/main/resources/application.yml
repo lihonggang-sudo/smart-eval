@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: smart-eval
+  datasource:
+    url: jdbc:postgresql://localhost:5432/smart_eval
+    username: smart_eval
+    password: smart_eval
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+app:
+  jwt:
+    issuer: smart-eval
+    secret: change-this-secret-in-production-change-this-secret
+    expires-in-minutes: 720
+  frontend:
+    mobile-url: http://localhost:5173/mobile/login
+  bootstrap:
+    admin:
+      enabled: false
+      username: admin
+      password:
+      display-name: 系统管理员
