@@ -6,11 +6,12 @@
 
 **Architecture:** Use a monorepo with `backend/` for Spring Boot REST APIs and `frontend/` for a React application based on Ant Design Pro. The frontend contains administrator routes under `/admin/*` with the Pro layout and mobile evaluator routes under `/mobile/*` with a separate lightweight layout. PostgreSQL is the system of record; Flyway owns schema creation and test data.
 
-**Tech Stack:** Java 21, Spring Boot 3.x, Spring Security, Spring Data JPA, Flyway, PostgreSQL, JUnit 5, Testcontainers, React, TypeScript, Ant Design Pro, Ant Design, Vitest, Playwright.
+**Tech Stack:** Java 17, Spring Boot 3.x, Spring Security, Spring Data JPA, Flyway, PostgreSQL, JUnit 5, Testcontainers, React, TypeScript, Ant Design Pro, Ant Design, Vitest, Playwright.
 
 ## Global Constraints
 
 - Use Spring Boot + React + PostgreSQL.
+- Use Java 17 for backend compilation and tests.
 - Administrator frontend uses Ant Design Pro.
 - Mobile evaluator frontend uses React independent mobile routes and does not use the Ant Design Pro desktop layout.
 - Administrator passwords are saved as BCrypt hashes.
@@ -116,6 +117,7 @@ Front-end responsibility:
 - Create: `backend/src/main/java/com/smarteval/SmartEvalApplication.java`
 - Create: `backend/src/main/resources/application.yml`
 - Create: `backend/src/test/java/com/smarteval/SmokeTest.java`
+- Create: `backend/src/test/resources/application-test.yml`
 
 **Interfaces:**
 - Produces: Maven project runnable with `./mvnw test` or `mvn test`.
@@ -173,7 +175,7 @@ Create `backend/pom.xml`:
     <name>smart-eval-backend</name>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
     </properties>
 
     <dependencies>
@@ -277,6 +279,35 @@ app:
     mobile-url: http://localhost:5173/mobile/login
 ```
 
+Create `backend/src/test/resources/application-test.yml`:
+
+```yaml
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+```
+
+Update `backend/src/test/java/com/smarteval/SmokeTest.java` to use the test profile:
+
+```java
+package com.smarteval;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+@SpringBootTest
+@ActiveProfiles("test")
+class SmokeTest {
+    @Test
+    void contextLoads() {
+    }
+}
+```
+
 - [ ] **Step 4: Run the smoke test**
 
 Run:
@@ -291,7 +322,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add backend/pom.xml backend/src/main/java/com/smarteval/SmartEvalApplication.java backend/src/main/resources/application.yml backend/src/test/java/com/smarteval/SmokeTest.java
+git add backend/pom.xml backend/src/main/java/com/smarteval/SmartEvalApplication.java backend/src/main/resources/application.yml backend/src/test/resources/application-test.yml backend/src/test/java/com/smarteval/SmokeTest.java
 git commit -m "chore: scaffold Spring Boot backend"
 ```
 
