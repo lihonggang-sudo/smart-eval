@@ -1,0 +1,243 @@
+import '@testing-library/jest-dom/vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AppRoutes } from '../app';
+import { routes } from '../routes';
+import type { EvaluationItemsResult, SubmitEvaluationRecord } from '../services/mobileEvaluation';
+import { getEvaluationItems, submitEvaluation } from '../services/mobileEvaluation';
+import { mobileLogin } from '../services/auth';
+import { saveToken } from '../services/session';
+
+const defaultEvaluationItems: EvaluationItemsResult = {
+  departmentId: 1,
+  departmentName: '组织部',
+  submitted: false,
+  items: [
+    { evaluateeId: 1, name: '张三' },
+    { evaluateeId: 2, name: '李四' }
+  ],
+  grades: [
+    { value: 'EXCELLENT', label: '优秀' },
+    { value: 'COMPETENT', label: '称职' },
+    { value: 'BASIC_COMPETENT', label: '基本称职' },
+    { value: 'INCOMPETENT', label: '不称职' }
+  ]
+};
+
+vi.mock('../services/mobileEvaluation', () => ({
+  getEvaluationItems: vi.fn(),
+  submitEvaluation: vi.fn()
+}));
+
+vi.mock('../services/auth', () => ({
+  mobileLogin: vi.fn()
+}));
+
+vi.mock('../services/session', () => ({
+  saveToken: vi.fn()
+}));
+
+function renderMobileRoute(initialEntry: string) {
+  return render(
+    <MemoryRouter
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      initialEntries={[initialEntry]}
+    >
+      <AppRoutes />
+    </MemoryRouter>
+  );
+}
+
+describe('mobile evaluation flow', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessionStorage.clear();
+    vi.mocked(getEvaluationItems).mockResolvedValue(structuredClone(defaultEvaluationItems));
+    vi.mocked(submitEvaluation).mockResolvedValue({
+      submitted: true,
+      submittedAt: '2026-07-04T00:00:00.000Z'
+    });
+    vi.mocked(mobileLogin).mockResolvedValue({
+      token: 'mobile-token',
+      user: {
+        id: 1,
+        username: 'mobile-user',
+        departmentId: 1,
+        departmentName: '组织部',
+        submitted: false
+      }
+    });
+  });
+
+  it('declares the exact mobile route manifest entries from the brief', () => {
+    expect(
+      routes.filter((route) =>
+        [
+          '/mobile/login',
+          '/mobile/evaluation',
+          '/mobile/confirm',
+          '/mobile/complete'
+        ].includes(route.path ?? '')
+      )
+    ).toEqual([
+      { path: '/mobile/login', component: './pages/mobile/Login', layout: false },
+      { path: '/mobile/evaluation', component: './pages/mobile/EvaluationPage', layout: false },
+      { path: '/mobile/confirm', component: './pages/mobile/ConfirmPage', layout: false },
+      { path: '/mobile/complete', component: './pages/mobile/CompletePage', layout: false }
+    ]);
+  });
+
+  it('saves the mobile token and navigates to evaluation after login success', async () => {
+    renderMobileRoute('/mobile/login');
+
+    fireEvent.change(screen.getByLabelText('账号'), { target: { value: 'mobile-user' } });
+    fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'secret' } });
+    fireEvent.click(screen.getByRole('button', { name: /登\s*录/ }));
+
+    await waitFor(() => {
+      expect(mobileLogin).toHaveBeenCalledWith('mobile-user', 'secret');
+      expect(saveToken).toHaveBeenCalledWith('mobile-token');
+    });
+
+    expect(await screen.findByText('组织部')).toBeInTheDocument();
+  });
+
+  it('shows the mobile login API error message on failure', async () => {
+    vi.mocked(mobileLogin).mockRejectedValueOnce(new Error('账号或密码错误'));
+
+    renderMobileRoute('/mobile/login');
+
+    fireEvent.change(screen.getByLabelText('账号'), { target: { value: 'mobile-user' } });
+    fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'wrong' } });
+    fireEvent.click(screen.getByRole('button', { name: /登\s*录/ }));
+
+    expect(await screen.findByText('账号或密码错误')).toBeInTheDocument();
+  });
+
+  it('requires all evaluatees to be graded before submit', async () => {
+    renderMobileRoute('/mobile/evaluation');
+
+    const submit = await screen.findByRole('button', { name: /提\s*交/ });
+    expect(submit).toBeDisabled();
+
+    fireEvent.click(screen.getAllByText('优秀')[0]);
+    expect(submit).toBeDisabled();
+
+    fireEvent.click(screen.getAllByText('称职')[1]);
+    expect(submit).toBeEnabled();
+  });
+
+  it('preserves selections through confirm and submits before navigating to completion', async () => {
+    renderMobileRoute('/mobile/evaluation');
+
+    const submit = await screen.findByRole('button', { name: /提\s*交/ });
+    fireEvent.click(screen.getAllByText('优秀')[0]);
+    fireEvent.click(screen.getAllByText('称职')[1]);
+    fireEvent.click(submit);
+
+    expect(await screen.findByText('提交确认')).toBeInTheDocument();
+    expect(screen.getByText(/已完成/)).toHaveTextContent('已完成 2 人评分。');
+
+    fireEvent.click(screen.getByRole('button', { name: /确认提交/ }));
+
+    await waitFor(() => {
+      expect(submitEvaluation).toHaveBeenCalledWith([
+        { evaluateeId: 1, grade: 'EXCELLENT' },
+        { evaluateeId: 2, grade: 'COMPETENT' }
+      ] satisfies SubmitEvaluationRecord[]);
+    });
+
+    expect(await screen.findByText('提交完成')).toBeInTheDocument();
+  });
+
+  it('clears any stored draft when the backend reports submitted already', async () => {
+    sessionStorage.setItem(
+      'smart_eval_mobile_draft',
+      JSON.stringify({
+        departmentId: 1,
+        departmentName: '组织部',
+        items: defaultEvaluationItems.items,
+        grades: defaultEvaluationItems.grades,
+        selections: {
+          '1': 'EXCELLENT',
+          '2': 'COMPETENT'
+        }
+      })
+    );
+    vi.mocked(getEvaluationItems).mockResolvedValueOnce({
+      departmentId: 1,
+      departmentName: '组织部',
+      submitted: true,
+      items: [],
+      grades: []
+    });
+
+    renderMobileRoute('/mobile/evaluation');
+
+    expect(await screen.findByText('提交完成')).toBeInTheDocument();
+    expect(sessionStorage.getItem('smart_eval_mobile_draft')).toBeNull();
+  });
+
+  it('redirects back to evaluation instead of submitting a stale or invalid confirm draft', async () => {
+    sessionStorage.setItem(
+      'smart_eval_mobile_draft',
+      JSON.stringify({
+        departmentId: 1,
+        departmentName: '组织部',
+        items: defaultEvaluationItems.items,
+        grades: defaultEvaluationItems.grades,
+        selections: {
+          '1': 'EXCELLENT',
+          '2': 'HACKED'
+        }
+      })
+    );
+
+    renderMobileRoute('/mobile/confirm');
+
+    expect(await screen.findByText('组织部')).toBeInTheDocument();
+    expect(submitEvaluation).not.toHaveBeenCalled();
+  });
+
+  it('clears malformed confirm drafts and routes back to evaluation without submitting', async () => {
+    const malformedDraft = JSON.stringify({
+      departmentId: 1,
+      departmentName: '组织部',
+      items: { broken: true },
+      grades: 'EXCELLENT',
+      selections: []
+    });
+
+    sessionStorage.setItem(
+      'smart_eval_mobile_draft',
+      malformedDraft
+    );
+
+    renderMobileRoute('/mobile/confirm');
+
+    expect(await screen.findByText('组织部')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /提\s*交/ })).toBeDisabled();
+    expect(submitEvaluation).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem('smart_eval_mobile_draft')).not.toBe(malformedDraft);
+  });
+
+  it('ignores malformed saved drafts while loading fresh evaluation items', async () => {
+    sessionStorage.setItem(
+      'smart_eval_mobile_draft',
+      JSON.stringify({
+        departmentId: 1,
+        departmentName: '组织部',
+        items: defaultEvaluationItems.items,
+        grades: defaultEvaluationItems.grades,
+        selections: null
+      })
+    );
+
+    renderMobileRoute('/mobile/evaluation');
+
+    expect(await screen.findByText('张三')).toBeInTheDocument();
+    expect(screen.queryByText('加载失败')).not.toBeInTheDocument();
+    expect(sessionStorage.getItem('smart_eval_mobile_draft')).not.toBeNull();
+  });
+});
