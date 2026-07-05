@@ -1,6 +1,7 @@
 import 'antd/dist/reset.css';
+import { LogoutOutlined } from '@ant-design/icons';
 import { ProLayout, PageContainer } from '@ant-design/pro-components';
-import { Typography } from 'antd';
+import { Button, Typography } from 'antd';
 import {
   BrowserRouter,
   Link,
@@ -8,6 +9,7 @@ import {
   Outlet,
   type RouteObject,
   useLocation,
+  useNavigate,
   useRoutes
 } from 'react-router-dom';
 import { getAdminNavigationRoutes, getRouteChildren, routes, type AppRoute } from './routes';
@@ -23,14 +25,32 @@ import CompletePage from './pages/mobile/CompletePage';
 import ConfirmPage from './pages/mobile/ConfirmPage';
 import EvaluationPage from './pages/mobile/EvaluationPage';
 import MobileLogin from './pages/mobile/Login';
+import { clearToken } from './services/session';
 
 function AdminShell() {
   const location = useLocation();
+  const navigate = useNavigate();
   const adminRoutes = getAdminNavigationRoutes(routes);
+
+  function handleLogout() {
+    clearToken();
+    navigate('/admin/login', { replace: true });
+  }
 
   return (
     <div data-testid="admin-layout">
       <ProLayout
+        actionsRender={() => [
+          <Button
+            key="logout"
+            aria-label="退出系统"
+            icon={<LogoutOutlined />}
+            type="text"
+            onClick={handleLogout}
+          >
+            退出系统
+          </Button>
+        ]}
         fixSiderbar
         location={{ pathname: location.pathname }}
         menuItemRender={(item, dom) => <Link to={item.path ?? '/admin'}>{dom}</Link>}

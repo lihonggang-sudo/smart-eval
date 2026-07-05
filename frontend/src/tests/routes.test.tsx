@@ -1,8 +1,14 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '../app';
 import { routes } from '../routes';
+import { clearToken } from '../services/session';
+
+vi.mock('../services/session', () => ({
+  authHeaders: vi.fn(() => ({})),
+  clearToken: vi.fn()
+}));
 
 describe('routes', () => {
   it('keeps mobile routes outside the admin layout', () => {
@@ -53,6 +59,23 @@ describe('routes', () => {
       </MemoryRouter>
     );
 
+    expect(screen.getByRole('heading', { name: '管理员登录' })).toBeInTheDocument();
+    expect(screen.queryByTestId('admin-layout')).not.toBeInTheDocument();
+  });
+
+  it('clears the admin token and returns to login when logging out', () => {
+    render(
+      <MemoryRouter
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        initialEntries={['/admin']}
+      >
+        <AppRoutes />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '退出系统' }));
+
+    expect(clearToken).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('heading', { name: '管理员登录' })).toBeInTheDocument();
     expect(screen.queryByTestId('admin-layout')).not.toBeInTheDocument();
   });
