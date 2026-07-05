@@ -27,6 +27,69 @@ import EvaluationPage from './pages/mobile/EvaluationPage';
 import MobileLogin from './pages/mobile/Login';
 import { clearToken } from './services/session';
 
+function AdminBrandHeader({ collapsed }: { collapsed?: boolean }) {
+  return (
+    <div
+      data-testid="admin-brand-header"
+      style={{
+        minHeight: 64,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        boxSizing: 'border-box',
+        padding: collapsed ? '0 16px' : '0 20px',
+        borderBottom: '1px solid #eef1f5'
+      }}
+    >
+      <div
+        data-testid="admin-brand-mark"
+        aria-hidden="true"
+        style={{
+          width: 34,
+          height: 34,
+          flex: '0 0 34px',
+          borderRadius: 7,
+          background: '#8a1f2d',
+          color: '#ffffff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 18,
+          fontWeight: 700
+        }}
+      >
+        评
+      </div>
+      {collapsed ? null : (
+        <div style={{ minWidth: 0, lineHeight: 1.25 }}>
+          <Typography.Text
+            strong
+            style={{
+              color: '#1f2937',
+              display: 'block',
+              fontSize: 15,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            鲁东大学
+          </Typography.Text>
+          <Typography.Text
+            style={{
+              color: '#6b7280',
+              display: 'block',
+              fontSize: 12,
+              marginTop: 3,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            民主测评系统
+          </Typography.Text>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AdminShell() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,9 +116,10 @@ function AdminShell() {
         ]}
         fixSiderbar
         location={{ pathname: location.pathname }}
+        menuHeaderRender={(_, __, props) => <AdminBrandHeader collapsed={props?.collapsed} />}
         menuItemRender={(item, dom) => <Link to={item.path ?? '/admin'}>{dom}</Link>}
         route={{ routes: adminRoutes }}
-        title="Smart Eval"
+        title="民主测评系统"
       >
         <PageContainer
           header={{

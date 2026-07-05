@@ -44,6 +44,25 @@ describe('AdminLogin', () => {
     });
   });
 
+  it('renders a formal desktop admin login layout', () => {
+    renderLogin();
+
+    expect(screen.getByTestId('admin-login-shell')).toHaveStyle({
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center'
+    });
+    expect(screen.getByTestId('admin-login-layout')).toHaveStyle({
+      display: 'grid',
+      maxWidth: '1040px'
+    });
+    expect(screen.getByTestId('admin-login-brand-panel')).toBeInTheDocument();
+    expect(screen.getByText('管理后台')).toBeInTheDocument();
+    expect(screen.getByText('仅限授权管理员使用')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '管理员登录' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '登录系统' })).toBeInTheDocument();
+  });
+
   it('saves token and navigates to admin dashboard after login success', async () => {
     renderLogin();
 

@@ -93,7 +93,7 @@ describe('mobile evaluation flow', () => {
 
     fireEvent.change(screen.getByLabelText('账号'), { target: { value: 'mobile-user' } });
     fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'secret' } });
-    fireEvent.click(screen.getByRole('button', { name: /登\s*录/ }));
+    fireEvent.click(screen.getByRole('button', { name: /进入测评/ }));
 
     await waitFor(() => {
       expect(mobileLogin).toHaveBeenCalledWith('mobile-user', 'secret');
@@ -110,7 +110,7 @@ describe('mobile evaluation flow', () => {
 
     fireEvent.change(screen.getByLabelText('账号'), { target: { value: 'mobile-user' } });
     fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'wrong' } });
-    fireEvent.click(screen.getByRole('button', { name: /登\s*录/ }));
+    fireEvent.click(screen.getByRole('button', { name: /进入测评/ }));
 
     expect(await screen.findByText('账号或密码错误')).toBeInTheDocument();
   });
