@@ -33,14 +33,21 @@ export default function ConfirmPage() {
 
     return draft.items
       .map((item) => {
-        const grade = draft.selections[String(item.evaluateeId)];
+        const key = String(item.evaluateeId);
+        const grade = draft.selections[key];
         if (!grade || !validGradeValues.has(grade)) {
           return null;
         }
 
+        const comments = draft.comments[key];
+        const comment1 = comments?.comment1 ?? '';
+        const comment2 = comments?.comment2 ?? '';
+
         return {
           evaluateeId: item.evaluateeId,
-          grade
+          grade,
+          ...(comment1 ? { comment1 } : {}),
+          ...(comment2 ? { comment2 } : {})
         };
       })
       .filter((record): record is SubmitEvaluationRecord => record !== null);

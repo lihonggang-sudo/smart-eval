@@ -1,4 +1,4 @@
-import { Alert, Button, Radio, Space, Spin, Typography } from 'antd';
+import { Alert, Button, Input, Radio, Space, Spin, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getEvaluationItems } from '../../services/mobileEvaluation';
@@ -8,6 +8,7 @@ import MobileLayout, {
   getValidMobileGrades,
   readMobileEvaluationDraft,
   saveMobileEvaluationDraft,
+  sanitizeMobileEvaluationComments,
   sanitizeMobileEvaluationSelections,
   type MobileEvaluationDraft
 } from './MobileLayout';
@@ -55,6 +56,10 @@ export default function EvaluationPage() {
           selections:
             savedDraft?.departmentId === result.departmentId
               ? sanitizeMobileEvaluationSelections(savedDraft.selections, itemIds, validGrades)
+              : {},
+          comments:
+            savedDraft?.departmentId === result.departmentId
+              ? sanitizeMobileEvaluationComments(savedDraft.comments, itemIds)
               : {}
         };
 
@@ -102,6 +107,30 @@ export default function EvaluationPage() {
         selections: {
           ...currentDraft.selections,
           [String(evaluateeId)]: matchedGrade.value as EvaluationGrade
+        }
+      };
+
+      saveMobileEvaluationDraft(nextDraft);
+      return nextDraft;
+    });
+  }
+
+  function handleCommentChange(evaluateeId: number, field: 'comment1' | 'comment2', value: string) {
+    setDraft((currentDraft) => {
+      if (!currentDraft) {
+        return currentDraft;
+      }
+
+      const key = String(evaluateeId);
+      const currentComments = currentDraft.comments[key] ?? { comment1: '', comment2: '' };
+      const nextDraft = {
+        ...currentDraft,
+        comments: {
+          ...currentDraft.comments,
+          [key]: {
+            ...currentComments,
+            [field]: value
+          }
         }
       };
 
@@ -169,6 +198,40 @@ export default function EvaluationPage() {
                   </Radio.Button>
                 ))}
               </Radio.Group>
+              <Space direction="vertical" size={12} style={{ display: 'flex', marginTop: 16 }}>
+                <div>
+                  <label htmlFor={`comment1-${item.evaluateeId}`}>
+                    <Typography.Text strong>
+                      是否存在慵懒散、不担当、不作为等问题及表现
+                    </Typography.Text>
+                  </label>
+                  <Input.TextArea
+                    id={`comment1-${item.evaluateeId}`}
+                    aria-label="是否存在慵懒散、不担当、不作为等问题及表现"
+                    maxLength={255}
+                    rows={3}
+                    showCount
+                    style={{ marginTop: 8 }}
+                    value={draft.comments[String(item.evaluateeId)]?.comment1 ?? ''}
+                    onChange={(event) => handleCommentChange(item.evaluateeId, 'comment1', event.target.value)}
+                  />
+                </div>
+                <div>
+                  <label htmlFor={`comment2-${item.evaluateeId}`}>
+                    <Typography.Text strong>意见或建议</Typography.Text>
+                  </label>
+                  <Input.TextArea
+                    id={`comment2-${item.evaluateeId}`}
+                    aria-label="意见或建议"
+                    maxLength={255}
+                    rows={3}
+                    showCount
+                    style={{ marginTop: 8 }}
+                    value={draft.comments[String(item.evaluateeId)]?.comment2 ?? ''}
+                    onChange={(event) => handleCommentChange(item.evaluateeId, 'comment2', event.target.value)}
+                  />
+                </div>
+              </Space>
             </section>
           ))}
         </Space>

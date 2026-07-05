@@ -151,6 +151,41 @@ describe('mobile evaluation flow', () => {
     expect(await screen.findByText('提交完成')).toBeInTheDocument();
   });
 
+  it('submits per-evaluatee comments with the selected grades', async () => {
+    renderMobileRoute('/mobile/evaluation');
+
+    const submit = await screen.findByRole('button', { name: /提\s*交/ });
+    fireEvent.click(screen.getAllByText('优秀')[0]);
+    fireEvent.click(screen.getAllByText('称职')[1]);
+
+    const problemInputs = screen.getAllByLabelText('是否存在慵懒散、不担当、不作为等问题及表现');
+    const suggestionInputs = screen.getAllByLabelText('意见或建议');
+    fireEvent.change(problemInputs[0], { target: { value: '张三存在推进慢的问题' } });
+    fireEvent.change(suggestionInputs[0], { target: { value: '建议加强跟踪督办' } });
+    fireEvent.change(problemInputs[1], { target: { value: '李四暂无明显问题' } });
+    fireEvent.change(suggestionInputs[1], { target: { value: '建议保持工作节奏' } });
+
+    fireEvent.click(submit);
+    fireEvent.click(await screen.findByRole('button', { name: /确认提交/ }));
+
+    await waitFor(() => {
+      expect(submitEvaluation).toHaveBeenCalledWith([
+        {
+          evaluateeId: 1,
+          grade: 'EXCELLENT',
+          comment1: '张三存在推进慢的问题',
+          comment2: '建议加强跟踪督办'
+        },
+        {
+          evaluateeId: 2,
+          grade: 'COMPETENT',
+          comment1: '李四暂无明显问题',
+          comment2: '建议保持工作节奏'
+        }
+      ] satisfies SubmitEvaluationRecord[]);
+    });
+  });
+
   it('clears any stored draft when the backend reports submitted already', async () => {
     sessionStorage.setItem(
       'smart_eval_mobile_draft',

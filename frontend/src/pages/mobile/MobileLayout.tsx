@@ -18,6 +18,12 @@ export type MobileEvaluationDraft = {
   items: MobileEvaluateeItem[];
   grades: MobileGradeItem[];
   selections: Record<string, EvaluationGrade>;
+  comments: Record<string, MobileEvaluationComments>;
+};
+
+export type MobileEvaluationComments = {
+  comment1: string;
+  comment2: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -45,6 +51,14 @@ function isValidSelections(value: unknown): value is Record<string, EvaluationGr
   return (
     isRecord(value) &&
     Object.values(value).every((grade) => isEvaluationGrade(grade))
+  );
+}
+
+function isValidComments(value: unknown): value is MobileEvaluationComments {
+  return (
+    isRecord(value) &&
+    typeof value.comment1 === 'string' &&
+    typeof value.comment2 === 'string'
   );
 }
 
@@ -80,6 +94,29 @@ export function sanitizeMobileEvaluationSelections(
 
     if (isEvaluationGrade(value) && allowedGradeValues.has(value)) {
       result[key] = value;
+    }
+
+    return result;
+  }, {});
+}
+
+export function sanitizeMobileEvaluationComments(
+  comments: Record<string, unknown> | unknown,
+  itemIds: number[]
+): Record<string, MobileEvaluationComments> {
+  if (!isRecord(comments)) {
+    return {};
+  }
+
+  return itemIds.reduce<Record<string, MobileEvaluationComments>>((result, itemId) => {
+    const key = String(itemId);
+    const value = comments[key];
+
+    if (isValidComments(value)) {
+      result[key] = {
+        comment1: value.comment1,
+        comment2: value.comment2
+      };
     }
 
     return result;
@@ -122,7 +159,11 @@ export function readMobileEvaluationDraft(): MobileEvaluationDraft | null {
       departmentName: parsed.departmentName,
       items: parsed.items,
       grades: parsed.grades,
-      selections: parsed.selections
+      selections: parsed.selections,
+      comments: sanitizeMobileEvaluationComments(
+        isRecord(parsed.comments) ? parsed.comments : {},
+        parsed.items.map((item) => item.evaluateeId)
+      )
     };
   } catch {
     sessionStorage.removeItem(DRAFT_KEY);
