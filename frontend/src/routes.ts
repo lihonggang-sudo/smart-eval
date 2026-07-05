@@ -21,7 +21,7 @@ export type AppRoute = {
 };
 
 export const routes: AppRoute[] = [
-  { path: '/', redirect: '/admin' },
+  { path: '/', redirect: '/admin/login' },
   { path: '/admin/login', component: './pages/admin/Login', layout: false },
   {
     path: '/admin',

@@ -32,6 +32,16 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/assets/**",
+                                "/favicon.ico",
+                                "/admin",
+                                "/admin/**",
+                                "/mobile",
+                                "/mobile/**"
+                        ).permitAll()
                         .requestMatchers("/api/admin/auth/login", "/api/mobile/auth/login").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/mobile/**").hasAuthority("EVALUATOR")
