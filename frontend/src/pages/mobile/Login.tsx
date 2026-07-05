@@ -27,7 +27,7 @@ export default function MobileLogin() {
   }
 
   return (
-    <MobileLayout title="评测登录" subtitle="请使用测评账号继续。">
+    <MobileLayout title="评测登录" subtitle="鲁东大学领导干部试用期满民主测评系统">
       <Form layout="vertical" size="large" onFinish={handleFinish}>
         <Form.Item
           label="账号"
