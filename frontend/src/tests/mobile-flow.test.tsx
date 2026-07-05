@@ -128,6 +128,28 @@ describe('mobile evaluation flow', () => {
     expect(submit).toBeEnabled();
   });
 
+  it('renders the formal mobile evaluation form structure with progress and item status', async () => {
+    renderMobileRoute('/mobile/evaluation');
+
+    expect(await screen.findByTestId('mobile-evaluation-summary')).toHaveTextContent('部门：组织部');
+    expect(screen.getByTestId('mobile-evaluation-summary')).toHaveTextContent('已评 0 / 2');
+    expect(screen.getByTestId('mobile-evaluation-summary')).toHaveTextContent(
+      '请逐项完成评分，提交前可返回确认。'
+    );
+    expect(screen.getByTestId('mobile-evaluatee-card-1')).toHaveTextContent('01');
+    expect(screen.getByTestId('mobile-evaluatee-card-1')).toHaveTextContent('未评分');
+    expect(screen.getByTestId('mobile-evaluatee-card-2')).toHaveTextContent('02');
+    expect(screen.getAllByText('综合评价')).toHaveLength(2);
+    expect(screen.getAllByText('文字意见')).toHaveLength(2);
+    expect(screen.getByTestId('mobile-evaluation-footer-progress')).toHaveTextContent('已完成 0/2');
+
+    fireEvent.click(screen.getAllByText('优秀')[0]);
+
+    expect(screen.getByTestId('mobile-evaluation-summary')).toHaveTextContent('已评 1 / 2');
+    expect(screen.getByTestId('mobile-evaluatee-card-1')).toHaveTextContent('已评分');
+    expect(screen.getByTestId('mobile-evaluation-footer-progress')).toHaveTextContent('已完成 1/2');
+  });
+
   it('preserves selections through confirm and submits before navigating to completion', async () => {
     renderMobileRoute('/mobile/evaluation');
 

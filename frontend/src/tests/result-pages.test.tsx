@@ -233,8 +233,8 @@ describe('result pages', () => {
     expect(screen.getByText('测评人部门')).toBeInTheDocument();
     expect(screen.getByText('被测评人员')).toBeInTheDocument();
     expect(screen.getByText('评价结果')).toBeInTheDocument();
-    expect(screen.getByText('评语1')).toBeInTheDocument();
-    expect(screen.getByText('评语2')).toBeInTheDocument();
+    expect(screen.getByText('问题及表现')).toBeInTheDocument();
+    expect(screen.getByText('意见或建议')).toBeInTheDocument();
     expect(screen.getByText('提交时间')).toBeInTheDocument();
 
     await waitFor(() => {

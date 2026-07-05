@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ADMIN_COPYRIGHT_TEXT } from '../components/AdminCopyright';
 import AdminLogin from '../pages/admin/Login';
 import { adminLogin } from '../services/auth';
 import { saveToken } from '../services/session';
@@ -61,9 +62,7 @@ describe('AdminLogin', () => {
     expect(screen.getByText('仅限授权管理员使用')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '管理员登录' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '登录系统' })).toBeInTheDocument();
-    expect(screen.getByTestId('admin-copyright')).toHaveTextContent(
-      'Copyright © 2026 鲁东大学. All Rights Reserved.'
-    );
+    expect(screen.getByTestId('admin-copyright')).toHaveTextContent(ADMIN_COPYRIGHT_TEXT);
   });
 
   it('saves token and navigates to admin dashboard after login success', async () => {

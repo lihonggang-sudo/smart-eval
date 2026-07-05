@@ -111,13 +111,13 @@ export default function ResultDetails() {
       render: (_, record) => record.gradeLabel
     },
     {
-      title: '评语1',
+      title: '问题及表现',
       dataIndex: 'comment1',
       search: false,
       renderText: (value) => value ?? '-'
     },
     {
-      title: '评语2',
+      title: '意见或建议',
       dataIndex: 'comment2',
       search: false,
       renderText: (value) => value ?? '-'

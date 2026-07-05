@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '../app';
+import { ADMIN_COPYRIGHT_TEXT } from '../components/AdminCopyright';
 import { routes } from '../routes';
 import { clearToken } from '../services/session';
 
@@ -100,9 +101,7 @@ describe('routes', () => {
 
     expect(screen.getByRole('heading', { name: '管理员工作台' })).toBeInTheDocument();
     expect(screen.getByTestId('admin-layout')).toBeInTheDocument();
-    expect(screen.getByTestId('admin-copyright')).toHaveTextContent(
-      'Copyright © 2026 鲁东大学. All Rights Reserved.'
-    );
+    expect(screen.getByTestId('admin-copyright')).toHaveTextContent(ADMIN_COPYRIGHT_TEXT);
   });
 
   it('renders the formal admin brand header in the side navigation', () => {

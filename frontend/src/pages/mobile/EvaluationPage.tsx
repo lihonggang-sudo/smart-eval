@@ -91,6 +91,14 @@ export default function EvaluationPage() {
     return draft.items.every((item) => Boolean(draft.selections[String(item.evaluateeId)]));
   }, [draft]);
 
+  const gradedCount = useMemo(() => {
+    if (!draft) {
+      return 0;
+    }
+
+    return draft.items.filter((item) => Boolean(draft.selections[String(item.evaluateeId)])).length;
+  }, [draft]);
+
   function handleGradeChange(evaluateeId: number, grade: string) {
     setDraft((currentDraft) => {
       if (!currentDraft) {
@@ -151,11 +159,37 @@ export default function EvaluationPage() {
   return (
     <MobileLayout
       title={draft?.departmentName ?? '测评列表'}
-      subtitle="请完成所有人员评分后再提交。"
+      subtitle="请逐项完成评分，提交前可返回确认。"
       footer={
-        <Button block disabled={!allGraded} size="large" type="primary" onClick={handleSubmit}>
-          提交
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            data-testid="mobile-evaluation-footer-progress"
+            style={{
+              flex: '0 0 auto',
+              color: '#5f6b7a',
+              fontSize: 13,
+              lineHeight: 1.4
+            }}
+          >
+            已完成 {gradedCount}/{draft?.items.length ?? 0}
+          </div>
+          <Button
+            block
+            disabled={!allGraded}
+            size="large"
+            style={{
+              height: 46,
+              borderRadius: 6,
+              background: allGraded ? '#8a1f2d' : undefined,
+              borderColor: allGraded ? '#8a1f2d' : undefined,
+              fontWeight: 600
+            }}
+            type="primary"
+            onClick={handleSubmit}
+          >
+            提交测评
+          </Button>
+        </div>
       }
     >
       {loading ? (
@@ -168,72 +202,212 @@ export default function EvaluationPage() {
 
       {!loading && draft ? (
         <Space direction="vertical" size={16} style={{ display: 'flex' }}>
-          {draft.items.map((item) => (
-            <section
-              key={item.evaluateeId}
+          <section
+            data-testid="mobile-evaluation-summary"
+            style={{
+              padding: 16,
+              borderRadius: 8,
+              background: '#ffffff',
+              border: '1px solid #d8dee8',
+              boxShadow: '0 8px 20px rgba(31, 45, 61, 0.06)'
+            }}
+          >
+            <div
               style={{
-                padding: 16,
-                borderRadius: 8,
-                background: '#ffffff',
-                border: '1px solid #f0f0f0'
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+                marginBottom: 10
               }}
             >
-              <Typography.Title level={5} style={{ marginBottom: 12 }}>
-                {item.name}
-              </Typography.Title>
-              <Radio.Group
-                buttonStyle="solid"
-                optionType="button"
-                style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}
-                value={draft.selections[String(item.evaluateeId)]}
-                onChange={(event) => handleGradeChange(item.evaluateeId, event.target.value)}
+              <Typography.Text strong style={{ color: '#1f2937', fontSize: 15 }}>
+                部门：{draft.departmentName}
+              </Typography.Text>
+              <Typography.Text
+                style={{
+                  color: '#8a1f2d',
+                  flex: '0 0 auto',
+                  fontSize: 13,
+                  fontWeight: 600
+                }}
               >
-                {draft.grades.map((grade) => (
-                  <Radio.Button
-                    key={grade.value}
-                    style={{ textAlign: 'center', borderRadius: 8 }}
-                    value={grade.value}
+                已评 {gradedCount} / {draft.items.length}
+              </Typography.Text>
+            </div>
+            <Typography.Text style={{ color: '#6b7280', fontSize: 13, lineHeight: 1.7 }}>
+              请逐项完成评分，提交前可返回确认。
+            </Typography.Text>
+          </section>
+
+          {draft.items.map((item, index) => {
+            const selectedGrade = draft.selections[String(item.evaluateeId)];
+            const hasGrade = Boolean(selectedGrade);
+
+            return (
+              <section
+                key={item.evaluateeId}
+                data-testid={`mobile-evaluatee-card-${item.evaluateeId}`}
+                style={{
+                  overflow: 'hidden',
+                  borderRadius: 8,
+                  background: '#ffffff',
+                  border: '1px solid #d8dee8',
+                  boxShadow: '0 8px 20px rgba(31, 45, 61, 0.06)'
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    padding: '14px 16px',
+                    background: '#f7f9fc',
+                    borderBottom: '1px solid #eef1f5'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        width: 34,
+                        height: 34,
+                        flex: '0 0 34px',
+                        borderRadius: 6,
+                        background: '#8a1f2d',
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 14,
+                        fontWeight: 700
+                      }}
+                    >
+                      {String(index + 1).padStart(2, '0')}
+                    </div>
+                    <Typography.Title
+                      level={5}
+                      style={{ color: '#1f2937', margin: 0, minWidth: 0 }}
+                    >
+                      {item.name}
+                    </Typography.Title>
+                  </div>
+                  <Typography.Text
+                    style={{
+                      color: hasGrade ? '#8a1f2d' : '#8c8c8c',
+                      flex: '0 0 auto',
+                      fontSize: 13,
+                      fontWeight: 600
+                    }}
                   >
-                    {grade.label}
-                  </Radio.Button>
-                ))}
-              </Radio.Group>
-              <Space direction="vertical" size={12} style={{ display: 'flex', marginTop: 16 }}>
-                <div>
-                  <label htmlFor={`comment1-${item.evaluateeId}`}>
-                    <Typography.Text strong>
-                      是否存在慵懒散、不担当、不作为等问题及表现
+                    {hasGrade ? '已评分' : '未评分'}
+                  </Typography.Text>
+                </div>
+
+                <div style={{ padding: 16 }}>
+                  <div style={{ marginBottom: 16 }}>
+                    <Typography.Text
+                      strong
+                      style={{
+                        color: '#1f2937',
+                        display: 'block',
+                        fontSize: 14,
+                        marginBottom: 10
+                      }}
+                    >
+                      综合评价
                     </Typography.Text>
-                  </label>
-                  <Input.TextArea
-                    id={`comment1-${item.evaluateeId}`}
-                    aria-label="是否存在慵懒散、不担当、不作为等问题及表现"
-                    maxLength={255}
-                    rows={3}
-                    showCount
-                    style={{ marginTop: 8 }}
-                    value={draft.comments[String(item.evaluateeId)]?.comment1 ?? ''}
-                    onChange={(event) => handleCommentChange(item.evaluateeId, 'comment1', event.target.value)}
-                  />
+                    <Radio.Group
+                      buttonStyle="solid"
+                      optionType="button"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                        gap: 8
+                      }}
+                      value={selectedGrade}
+                      onChange={(event) => handleGradeChange(item.evaluateeId, event.target.value)}
+                    >
+                      {draft.grades.map((grade) => (
+                        <Radio.Button
+                          key={grade.value}
+                          style={{
+                            borderRadius: 6,
+                            height: 40,
+                            lineHeight: '38px',
+                            textAlign: 'center'
+                          }}
+                          value={grade.value}
+                        >
+                          {grade.label}
+                        </Radio.Button>
+                      ))}
+                    </Radio.Group>
+                  </div>
+
+                  <div
+                    style={{
+                      borderTop: '1px solid #eef1f5',
+                      paddingTop: 14
+                    }}
+                  >
+                    <Typography.Text
+                      strong
+                      style={{
+                        color: '#1f2937',
+                        display: 'block',
+                        fontSize: 14,
+                        marginBottom: 12
+                      }}
+                    >
+                      文字意见
+                    </Typography.Text>
+                    <Space direction="vertical" size={12} style={{ display: 'flex' }}>
+                      <div>
+                        <label htmlFor={`comment1-${item.evaluateeId}`}>
+                          <Typography.Text strong style={{ fontSize: 13 }}>
+                            是否存在慵懒散、不担当、不作为等问题及表现
+                          </Typography.Text>
+                        </label>
+                        <Input.TextArea
+                          id={`comment1-${item.evaluateeId}`}
+                          aria-label="是否存在慵懒散、不担当、不作为等问题及表现"
+                          maxLength={200}
+                          rows={3}
+                          showCount
+                          style={{ marginTop: 8 }}
+                          value={draft.comments[String(item.evaluateeId)]?.comment1 ?? ''}
+                          onChange={(event) =>
+                            handleCommentChange(item.evaluateeId, 'comment1', event.target.value)
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`comment2-${item.evaluateeId}`}>
+                          <Typography.Text strong style={{ fontSize: 13 }}>
+                            意见或建议
+                          </Typography.Text>
+                        </label>
+                        <Input.TextArea
+                          id={`comment2-${item.evaluateeId}`}
+                          aria-label="意见或建议"
+                          maxLength={200}
+                          rows={3}
+                          showCount
+                          style={{ marginTop: 8 }}
+                          value={draft.comments[String(item.evaluateeId)]?.comment2 ?? ''}
+                          onChange={(event) =>
+                            handleCommentChange(item.evaluateeId, 'comment2', event.target.value)
+                          }
+                        />
+                      </div>
+                    </Space>
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor={`comment2-${item.evaluateeId}`}>
-                    <Typography.Text strong>意见或建议</Typography.Text>
-                  </label>
-                  <Input.TextArea
-                    id={`comment2-${item.evaluateeId}`}
-                    aria-label="意见或建议"
-                    maxLength={255}
-                    rows={3}
-                    showCount
-                    style={{ marginTop: 8 }}
-                    value={draft.comments[String(item.evaluateeId)]?.comment2 ?? ''}
-                    onChange={(event) => handleCommentChange(item.evaluateeId, 'comment2', event.target.value)}
-                  />
-                </div>
-              </Space>
-            </section>
-          ))}
+              </section>
+            );
+          })}
         </Space>
       ) : null}
     </MobileLayout>
