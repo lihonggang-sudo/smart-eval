@@ -100,6 +100,9 @@ describe('routes', () => {
 
     expect(screen.getByRole('heading', { name: '管理员工作台' })).toBeInTheDocument();
     expect(screen.getByTestId('admin-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('admin-copyright')).toHaveTextContent(
+      'Copyright © 2026 鲁东大学. All Rights Reserved.'
+    );
   });
 
   it('renders the formal admin brand header in the side navigation', () => {
@@ -118,7 +121,7 @@ describe('routes', () => {
     });
     expect(screen.getByTestId('admin-brand-mark')).toHaveTextContent('评');
     expect(screen.getByText('鲁东大学')).toBeInTheDocument();
-    expect(screen.getByText('民主测评管理系统')).toBeInTheDocument();
+    expect(screen.getByText('民主测评系统')).toBeInTheDocument();
   });
 
   it('renders admin login outside the admin layout', () => {

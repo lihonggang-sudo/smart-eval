@@ -61,6 +61,9 @@ describe('AdminLogin', () => {
     expect(screen.getByText('仅限授权管理员使用')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '管理员登录' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '登录系统' })).toBeInTheDocument();
+    expect(screen.getByTestId('admin-copyright')).toHaveTextContent(
+      'Copyright © 2026 鲁东大学. All Rights Reserved.'
+    );
   });
 
   it('saves token and navigates to admin dashboard after login success', async () => {

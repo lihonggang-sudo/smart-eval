@@ -25,6 +25,7 @@ import CompletePage from './pages/mobile/CompletePage';
 import ConfirmPage from './pages/mobile/ConfirmPage';
 import EvaluationPage from './pages/mobile/EvaluationPage';
 import MobileLogin from './pages/mobile/Login';
+import AdminCopyright from './components/AdminCopyright';
 import { clearToken } from './services/session';
 
 function AdminBrandHeader({ collapsed }: { collapsed?: boolean }) {
@@ -121,14 +122,25 @@ function AdminShell() {
         route={{ routes: adminRoutes }}
         title="民主测评系统"
       >
-        <PageContainer
-          header={{
-            title: false,
-            breadcrumb: {}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100vh'
           }}
         >
-          <Outlet />
-        </PageContainer>
+          <div style={{ flex: '1 1 auto' }}>
+            <PageContainer
+              header={{
+                title: false,
+                breadcrumb: {}
+              }}
+            >
+              <Outlet />
+            </PageContainer>
+          </div>
+          <AdminCopyright />
+        </div>
       </ProLayout>
     </div>
   );
