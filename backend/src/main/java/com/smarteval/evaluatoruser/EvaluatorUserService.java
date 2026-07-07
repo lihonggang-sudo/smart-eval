@@ -17,12 +17,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class EvaluatorUserService {
     private static final String DEPARTMENT_NOT_FOUND_MESSAGE = "部门不存在";
     private static final String EVALUATOR_USER_NOT_FOUND_MESSAGE = "考评用户不存在";
+    private static final String USERNAME_GENERATION_FAILED_MESSAGE = "生成账号失败，请重试";
+    private static final int USERNAME_GENERATION_ATTEMPT_MULTIPLIER = 20;
+    private static final int MIN_USERNAME_GENERATION_ATTEMPTS = 100;
 
     private final EvaluatorUserRepository evaluatorUserRepository;
     private final DepartmentRepository departmentRepository;
@@ -71,21 +76,29 @@ public class EvaluatorUserService {
         authService.requireEnabledAdmin(currentUser);
 
         Department department = getRequiredDepartment(request.departmentId());
-        String departmentCode = "D%03d".formatted(department.getId());
-        long nextSequence = 1L;
+        int maxAttempts = Math.max(MIN_USERNAME_GENERATION_ATTEMPTS,
+                request.count() * USERNAME_GENERATION_ATTEMPT_MULTIPLIER);
+        int attempts = 0;
+        Set<String> usernamesInBatch = new HashSet<>();
         List<EvaluatorUser> createdUsers = new ArrayList<>();
-        for (int index = 0; index < request.count(); index++) {
-            String username;
-            do {
-                username = "%s-%04d".formatted(departmentCode, nextSequence++);
-            } while (evaluatorUserRepository.existsByUsername(username));
+        while (createdUsers.size() < request.count() && attempts < maxAttempts) {
+            attempts++;
+            String username = randomCredentialGenerator.username();
+            if (usernamesInBatch.contains(username) || evaluatorUserRepository.existsByUsername(username)) {
+                continue;
+            }
 
+            usernamesInBatch.add(username);
             createdUsers.add(new EvaluatorUser(
                     username,
                     randomCredentialGenerator.password(),
                     department,
                     true
             ));
+        }
+
+        if (createdUsers.size() < request.count()) {
+            throw new BusinessException(USERNAME_GENERATION_FAILED_MESSAGE);
         }
 
         List<EvaluatorUserListItem> items = evaluatorUserRepository.saveAll(createdUsers)

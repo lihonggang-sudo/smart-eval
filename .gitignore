@@ -27,3 +27,4 @@ replay_pid*
 /.superpowers/
 /.idea/
 /frontend/dist/
+/frontend/.idea/

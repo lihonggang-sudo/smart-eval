@@ -83,10 +83,10 @@ class EvaluatorUserControllerTest extends PostgresIntegrationTest {
     }
 
     @Test
-    void generatorCreatesUniqueUsernamesAndSixCharacterPasswords() {
+    void generatorCreatesRandomUsernameAndSixCharacterPassword() {
         RandomCredentialGenerator generator = new RandomCredentialGenerator();
 
-        Assertions.assertEquals(20, generator.usernames("D001", 20).stream().distinct().count());
+        Assertions.assertTrue(generator.username().matches("[A-Z0-9]{8}"));
         Assertions.assertTrue(generator.password().matches("[A-Z0-9]{6}"));
     }
 
@@ -116,7 +116,7 @@ class EvaluatorUserControllerTest extends PostgresIntegrationTest {
     }
 
     @Test
-    void batchGeneratesEvaluatorUsersWithSequentialUniqueNames() throws Exception {
+    void batchGeneratesEvaluatorUsersWithRandomUniqueNames() throws Exception {
         mockMvc.perform(post("/api/admin/evaluator-users/batch-generate")
                         .header("Authorization", adminBearer)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -127,12 +127,26 @@ class EvaluatorUserControllerTest extends PostgresIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.created").value(3))
                 .andExpect(jsonPath("$.data.items", hasSize(3)))
-                .andExpect(jsonPath("$.data.items[0].username").value("%s-0003".formatted(departmentOneCode)))
-                .andExpect(jsonPath("$.data.items[1].username").value("%s-0004".formatted(departmentOneCode)))
-                .andExpect(jsonPath("$.data.items[2].username").value("%s-0005".formatted(departmentOneCode)))
+                .andExpect(jsonPath("$.data.items[0].username", matchesPattern("[A-Z0-9]{8}")))
+                .andExpect(jsonPath("$.data.items[1].username", matchesPattern("[A-Z0-9]{8}")))
+                .andExpect(jsonPath("$.data.items[2].username", matchesPattern("[A-Z0-9]{8}")))
+                .andExpect(jsonPath("$.data.items[0].username").value(org.hamcrest.Matchers.not(matchesPattern("D\\d{3}-\\d{4}"))))
+                .andExpect(jsonPath("$.data.items[1].username").value(org.hamcrest.Matchers.not(matchesPattern("D\\d{3}-\\d{4}"))))
+                .andExpect(jsonPath("$.data.items[2].username").value(org.hamcrest.Matchers.not(matchesPattern("D\\d{3}-\\d{4}"))))
+                .andExpect(jsonPath("$.data.items[0].departmentId").value(departmentOneId))
+                .andExpect(jsonPath("$.data.items[1].departmentId").value(departmentOneId))
+                .andExpect(jsonPath("$.data.items[2].departmentId").value(departmentOneId))
                 .andExpect(jsonPath("$.data.items[0].passwordPlain", matchesPattern("[A-Z0-9]{6}")))
                 .andExpect(jsonPath("$.data.items[1].passwordPlain", matchesPattern("[A-Z0-9]{6}")))
                 .andExpect(jsonPath("$.data.items[2].passwordPlain", matchesPattern("[A-Z0-9]{6}")));
+
+        var usernames = evaluatorUserRepository.findAll().stream()
+                .map(EvaluatorUser::getUsername)
+                .filter(username -> username.matches("[A-Z0-9]{8}"))
+                .toList();
+
+        Assertions.assertEquals(3, usernames.size());
+        Assertions.assertEquals(3, usernames.stream().distinct().count());
     }
 
     @Test
