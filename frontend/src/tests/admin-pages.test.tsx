@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { message } from 'antd';
@@ -7,7 +7,7 @@ import AdminUsers from '../pages/admin/AdminUsers';
 import Departments from '../pages/admin/Departments';
 import Evaluatees from '../pages/admin/Evaluatees';
 import EvaluatorUsers from '../pages/admin/EvaluatorUsers';
-import { listDepartments } from '../services/departments';
+import { deleteDepartment, listDepartments } from '../services/departments';
 import { fetchEvaluatorUsersPrintHtml } from '../services/evaluatorUsers';
 import { routes } from '../routes';
 
@@ -80,6 +80,28 @@ describe('admin management pages', () => {
   it('renders create action', async () => {
     render(<Departments />);
     expect(await screen.findByText('新增部门')).toBeInTheDocument();
+  });
+
+  it('shows backend message when deleting a department fails', async () => {
+    const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => {
+      return undefined as never;
+    });
+
+    vi.mocked(deleteDepartment).mockRejectedValueOnce(
+      new Error('部门下存在关联数据，不能删除')
+    );
+
+    render(<Departments />);
+
+    fireEvent.click(await screen.findByText('删除'));
+    fireEvent.click(await screen.findByRole('button', { name: /确 定|确定|OK/i }));
+
+    await waitFor(() => {
+      expect(deleteDepartment).toHaveBeenCalledWith(1);
+      expect(errorSpy).toHaveBeenCalledWith('部门下存在关联数据，不能删除');
+    });
+
+    errorSpy.mockRestore();
   });
 
   it('renders evaluatee management action', async () => {

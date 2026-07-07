@@ -218,10 +218,11 @@ class EvaluatorUserControllerTest extends PostgresIntegrationTest {
                         .header("Authorization", adminBearer))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("text/html;charset=UTF-8"))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("http://localhost:5173/mobile/login")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("组织部")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("%s-0002".formatted(departmentOneCode))))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("PASS22")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("PASS22")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("登录地址"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("/mobile/login"))));
     }
 
     @Test

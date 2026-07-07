@@ -1,19 +1,12 @@
 package com.smarteval.print;
 
 import com.smarteval.evaluatoruser.dto.EvaluatorUserListItem;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class PrintCredentialService {
-    private final String mobileLoginUrl;
-
-    public PrintCredentialService(@Value("${app.frontend.mobile-url}") String mobileLoginUrl) {
-        this.mobileLoginUrl = mobileLoginUrl;
-    }
-
     public String renderHtml(List<EvaluatorUserListItem> items) {
         StringBuilder html = new StringBuilder();
         html.append("""
@@ -40,8 +33,6 @@ public class PrintCredentialService {
         for (EvaluatorUserListItem item : items) {
             html.append("""
                     <section class="card">
-                      <div class="label">登录地址</div>
-                      <div class="value">%s</div>
                       <div class="label">部门</div>
                       <div class="value">%s</div>
                       <div class="label">用户名</div>
@@ -50,7 +41,6 @@ public class PrintCredentialService {
                       <div class="value">%s</div>
                     </section>
                     """.formatted(
-                    escapeHtml(mobileLoginUrl),
                     escapeHtml(item.departmentName()),
                     escapeHtml(item.username()),
                     escapeHtml(item.passwordPlain())

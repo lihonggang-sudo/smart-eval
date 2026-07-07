@@ -18,7 +18,7 @@ app:
     secret: change-this-secret-in-production-change-this-secret
     expires-in-minutes: 720
   frontend:
-    mobile-url: http://localhost:5173/mobile/login
+    mobile-url: https://kaohe.ldu.edu.cn/mobile/login
   bootstrap:
     admin:
       enabled: false

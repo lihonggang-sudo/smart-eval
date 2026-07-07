@@ -62,9 +62,15 @@ export default function Departments() {
           key="delete"
           title="确认删除该部门吗？"
           onConfirm={async () => {
-            await deleteDepartment(record.id);
-            message.success('部门已删除');
-            actionRef.current?.reload();
+            try {
+              await deleteDepartment(record.id);
+              message.success('部门已删除');
+              actionRef.current?.reload();
+            } catch (error) {
+              message.error(
+                error instanceof Error ? error.message : '删除部门失败，请稍后重试'
+              );
+            }
           }}
         >
           <Button danger icon={<DeleteOutlined />} type="link">
