@@ -10,6 +10,7 @@ import com.smarteval.evaluation.dto.GradeItem;
 import com.smarteval.evaluation.dto.SubmitEvaluationRecord;
 import com.smarteval.evaluation.dto.SubmitEvaluationRequest;
 import com.smarteval.evaluation.dto.SubmitEvaluationResponse;
+import com.smarteval.evaluationperiod.EvaluationPeriodContext;
 import com.smarteval.evaluatoruser.EvaluatorUser;
 import com.smarteval.evaluatoruser.EvaluatorUserRepository;
 import com.smarteval.security.CurrentUser;
@@ -117,7 +118,7 @@ public class EvaluationService {
             throw new BusinessException(INVALID_EVALUATEE_MESSAGE);
         }
 
-        return new EvaluationRecord(
+        EvaluationRecord evaluationRecord = new EvaluationRecord(
                 evaluatorUser,
                 evaluatee,
                 evaluatorUser.getDepartment(),
@@ -125,6 +126,8 @@ public class EvaluationService {
                 record.comment1(),
                 record.comment2()
         );
+        evaluationRecord.setEvaluationPeriodId(evaluatorUser.getEvaluationPeriodId());
+        return evaluationRecord;
     }
 
     private void validateSubmittedRecords(List<SubmitEvaluationRecord> submittedRecords) {

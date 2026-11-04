@@ -5,6 +5,7 @@ import com.smarteval.common.BusinessException;
 import com.smarteval.common.PageResponse;
 import com.smarteval.department.Department;
 import com.smarteval.department.DepartmentRepository;
+import com.smarteval.evaluationperiod.EvaluationPeriodContext;
 import com.smarteval.evaluatoruser.dto.BatchGenerateEvaluatorRequest;
 import com.smarteval.evaluatoruser.dto.BatchGenerateEvaluatorResponse;
 import com.smarteval.evaluatoruser.dto.EvaluatorUserListItem;
@@ -75,6 +76,11 @@ public class EvaluatorUserService {
     public BatchGenerateEvaluatorResponse batchGenerate(CurrentUser currentUser, BatchGenerateEvaluatorRequest request) {
         authService.requireEnabledAdmin(currentUser);
 
+        Long periodId = EvaluationPeriodContext.getCurrentPeriodId();
+        if (periodId == null) {
+            throw new BusinessException("当前批次未设置");
+        }
+
         Department department = getRequiredDepartment(request.departmentId());
         int maxAttempts = Math.max(MIN_USERNAME_GENERATION_ATTEMPTS,
                 request.count() * USERNAME_GENERATION_ATTEMPT_MULTIPLIER);
@@ -89,12 +95,14 @@ public class EvaluatorUserService {
             }
 
             usernamesInBatch.add(username);
-            createdUsers.add(new EvaluatorUser(
+            EvaluatorUser user = new EvaluatorUser(
                     username,
                     randomCredentialGenerator.password(),
                     department,
                     true
-            ));
+            );
+            user.setEvaluationPeriodId(periodId);
+            createdUsers.add(user);
         }
 
         if (createdUsers.size() < request.count()) {

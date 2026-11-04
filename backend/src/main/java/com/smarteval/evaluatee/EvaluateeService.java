@@ -9,6 +9,7 @@ import com.smarteval.evaluatee.dto.EvaluateeListItem;
 import com.smarteval.evaluatee.dto.EvaluateeRequest;
 import com.smarteval.evaluatee.dto.SetEnabledRequest;
 import com.smarteval.evaluation.EvaluationRecordRepository;
+import com.smarteval.evaluationperiod.EvaluationPeriodContext;
 import com.smarteval.security.CurrentUser;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -66,13 +67,15 @@ public class EvaluateeService {
     public EvaluateeListItem create(CurrentUser currentUser, EvaluateeRequest request) {
         authService.requireEnabledAdmin(currentUser);
 
+        Long periodId = EvaluationPeriodContext.getCurrentPeriodId();
+        if (periodId == null) {
+            throw new BusinessException("当前批次未设置");
+        }
+
         Department department = getRequiredDepartment(request.departmentId());
-        Evaluatee evaluatee = evaluateeRepository.save(new Evaluatee(
-                request.name(),
-                department,
-                request.enabled()
-        ));
-        return toListItem(evaluatee);
+        Evaluatee evaluatee = new Evaluatee(request.name(), department, request.enabled());
+        evaluatee.setEvaluationPeriodId(periodId);
+        return toListItem(evaluateeRepository.save(evaluatee));
     }
 
     @Transactional
