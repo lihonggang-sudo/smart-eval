@@ -12,7 +12,7 @@ export async function request<T>(url: string, options: RequestInit = {}): Promis
   };
 
   // Add authorization token
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('smart_eval_token');
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
