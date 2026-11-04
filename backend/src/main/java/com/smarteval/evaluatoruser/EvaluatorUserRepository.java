@@ -20,6 +20,8 @@ public interface EvaluatorUserRepository extends JpaRepository<EvaluatorUser, Lo
 
     boolean existsByUsername(String username);
 
+    boolean existsByEvaluationPeriodId(Long evaluationPeriodId);
+
     long countByDepartmentId(Long departmentId);
 
     long countBySubmittedTrue();

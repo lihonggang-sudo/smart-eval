@@ -13,6 +13,8 @@ public interface EvaluateeRepository extends JpaRepository<Evaluatee, Long> {
 
     long countByDepartmentId(Long departmentId);
 
+    boolean existsByEvaluationPeriodId(Long evaluationPeriodId);
+
     @Query("""
             select e from Evaluatee e
             where (:departmentId is null or e.department.id = :departmentId)

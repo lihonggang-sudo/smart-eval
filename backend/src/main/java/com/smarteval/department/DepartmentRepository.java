@@ -10,4 +10,6 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     boolean existsByNameAndIdNot(String name, Long id);
 
     Page<Department> findByNameContaining(String name, Pageable pageable);
+
+    boolean existsByEvaluationPeriodId(Long evaluationPeriodId);
 }

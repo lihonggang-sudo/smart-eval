@@ -13,6 +13,8 @@ public interface EvaluationRecordRepository extends JpaRepository<EvaluationReco
 
     boolean existsByEvaluateeId(Long evaluateeId);
 
+    boolean existsByEvaluationPeriodId(Long evaluationPeriodId);
+
     long countByDepartmentId(Long departmentId);
 
     @Query(value = """
