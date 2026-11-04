@@ -1,4 +1,4 @@
-import request from '@/request';
+import { request } from '@/request';
 
 export interface EvaluationPeriod {
   id: number;
@@ -10,7 +10,7 @@ export interface CreateEvaluationPeriodRequest {
   name: string;
 }
 
-export async function getEvaluationPeriods(): Promise<API.Response<EvaluationPeriod[]>> {
+export async function getEvaluationPeriods(): Promise<EvaluationPeriod[]> {
   return request('/api/admin/evaluation-periods', {
     method: 'GET',
   });
@@ -18,10 +18,10 @@ export async function getEvaluationPeriods(): Promise<API.Response<EvaluationPer
 
 export async function createEvaluationPeriod(
   data: CreateEvaluationPeriodRequest,
-): Promise<API.Response<EvaluationPeriod>> {
+): Promise<EvaluationPeriod> {
   return request('/api/admin/evaluation-periods', {
     method: 'POST',
-    data,
+    body: JSON.stringify(data),
   });
 }
 
