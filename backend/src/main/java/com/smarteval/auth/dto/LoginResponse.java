@@ -1,4 +1,6 @@
 package com.smarteval.auth.dto;
 
-public record LoginResponse(String token, Object user) {
+import com.smarteval.evaluationperiod.dto.LatestPeriodInfo;
+
+public record LoginResponse(String token, Object user, LatestPeriodInfo latestPeriod) {
 }

@@ -7,6 +7,7 @@ import com.smarteval.department.dto.DepartmentListItem;
 import com.smarteval.department.dto.DepartmentRequest;
 import com.smarteval.evaluation.EvaluationRecordRepository;
 import com.smarteval.evaluatee.EvaluateeRepository;
+import com.smarteval.evaluationperiod.EvaluationPeriodContext;
 import com.smarteval.evaluatoruser.EvaluatorUserRepository;
 import com.smarteval.security.CurrentUser;
 import org.springframework.data.domain.PageRequest;
@@ -60,11 +61,18 @@ public class DepartmentService {
     public DepartmentListItem create(CurrentUser currentUser, DepartmentRequest request) {
         authService.requireEnabledAdmin(currentUser);
 
+        Long periodId = EvaluationPeriodContext.getCurrentPeriodId();
+        if (periodId == null) {
+            throw new BusinessException("当前批次未设置");
+        }
+
         if (departmentRepository.existsByName(request.name())) {
             throw new BusinessException(DUPLICATE_NAME_MESSAGE);
         }
 
-        return toListItem(departmentRepository.save(new Department(request.name(), request.sortOrder())));
+        Department department = new Department(request.name(), request.sortOrder());
+        department.setEvaluationPeriodId(periodId);
+        return toListItem(departmentRepository.save(department));
     }
 
     @Transactional

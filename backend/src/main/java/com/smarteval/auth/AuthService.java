@@ -6,6 +6,9 @@ import com.smarteval.auth.dto.AdminMeResponse;
 import com.smarteval.auth.dto.EvaluatorMeResponse;
 import com.smarteval.auth.dto.LoginResponse;
 import com.smarteval.common.BusinessException;
+import com.smarteval.evaluationperiod.EvaluationPeriod;
+import com.smarteval.evaluationperiod.EvaluationPeriodService;
+import com.smarteval.evaluationperiod.dto.LatestPeriodInfo;
 import com.smarteval.evaluatoruser.EvaluatorUser;
 import com.smarteval.evaluatoruser.EvaluatorUserRepository;
 import com.smarteval.security.CurrentUser;
@@ -15,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 public class AuthService {
     private static final String INVALID_CREDENTIALS_MESSAGE = "用户名或密码错误";
@@ -23,17 +28,20 @@ public class AuthService {
     private final EvaluatorUserRepository evaluatorUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EvaluationPeriodService evaluationPeriodService;
 
     public AuthService(
             AdminUserRepository adminUserRepository,
             EvaluatorUserRepository evaluatorUserRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService
+            JwtService jwtService,
+            EvaluationPeriodService evaluationPeriodService
     ) {
         this.adminUserRepository = adminUserRepository;
         this.evaluatorUserRepository = evaluatorUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.evaluationPeriodService = evaluationPeriodService;
     }
 
     @Transactional(readOnly = true)
@@ -43,9 +51,15 @@ public class AuthService {
                 .filter(user -> passwordEncoder.matches(password, user.getPasswordHash()))
                 .orElseThrow(() -> new BusinessException(INVALID_CREDENTIALS_MESSAGE));
 
+        Optional<EvaluationPeriod> latestPeriod = evaluationPeriodService.getLatest();
+        LatestPeriodInfo latestPeriodInfo = latestPeriod
+                .map(p -> new LatestPeriodInfo(p.getId(), p.getName()))
+                .orElse(null);
+
         return new LoginResponse(
                 jwtService.issue(adminUser.getId(), UserRole.ADMIN, adminUser.getUsername()),
-                toAdminMeResponse(adminUser)
+                toAdminMeResponse(adminUser),
+                latestPeriodInfo
         );
     }
 
@@ -63,7 +77,8 @@ public class AuthService {
 
         return new LoginResponse(
                 jwtService.issue(evaluatorUser.getId(), UserRole.EVALUATOR, evaluatorUser.getUsername()),
-                toEvaluatorMeResponse(evaluatorUser)
+                toEvaluatorMeResponse(evaluatorUser),
+                null
         );
     }
 
