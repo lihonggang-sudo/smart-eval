@@ -49,7 +49,13 @@ public class EvaluateeService {
     ) {
         authService.requireEnabledAdmin(currentUser);
 
+        Long periodId = EvaluationPeriodContext.getCurrentPeriodId();
+        if (periodId == null) {
+            throw new BusinessException("当前批次未设置");
+        }
+
         var evaluatees = evaluateeRepository.search(
+                periodId,
                 departmentId,
                 name == null ? "" : name,
                 enabled,

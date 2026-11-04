@@ -31,7 +31,8 @@ public interface EvaluationRecordRepository extends JpaRepository<EvaluationReco
             from EvaluationRecord r
             join r.evaluatee ee
             join r.department d
-            where (:departmentId is null or d.id = :departmentId)
+            where r.evaluationPeriodId = :evaluationPeriodId
+              and (:departmentId is null or d.id = :departmentId)
               and (:evaluateeName = '' or ee.name like concat('%', :evaluateeName, '%'))
             group by ee.id, ee.name, d.id, d.name
             order by ee.id asc
@@ -41,10 +42,12 @@ public interface EvaluationRecordRepository extends JpaRepository<EvaluationReco
                     from EvaluationRecord r
                     join r.evaluatee ee
                     join r.department d
-                    where (:departmentId is null or d.id = :departmentId)
+                    where r.evaluationPeriodId = :evaluationPeriodId
+                      and (:departmentId is null or d.id = :departmentId)
                       and (:evaluateeName = '' or ee.name like concat('%', :evaluateeName, '%'))
                     """)
     Page<ResultSummaryItem> findResultSummaries(
+            @Param("evaluationPeriodId") Long evaluationPeriodId,
             @Param("departmentId") Long departmentId,
             @Param("evaluateeName") String evaluateeName,
             Pageable pageable
@@ -57,7 +60,8 @@ public interface EvaluationRecordRepository extends JpaRepository<EvaluationReco
             join r.evaluatorUser eu
             join r.evaluatee ee
             join r.department d
-            where (:departmentId is null or d.id = :departmentId)
+            where r.evaluationPeriodId = :evaluationPeriodId
+              and (:departmentId is null or d.id = :departmentId)
               and (:evaluateeId is null or ee.id = :evaluateeId)
               and (:evaluatorUserId is null or eu.id = :evaluatorUserId)
               and (:grade is null or r.grade = :grade)
@@ -69,12 +73,14 @@ public interface EvaluationRecordRepository extends JpaRepository<EvaluationReco
                     join r.evaluatorUser eu
                     join r.evaluatee ee
                     join r.department d
-                    where (:departmentId is null or d.id = :departmentId)
+                    where r.evaluationPeriodId = :evaluationPeriodId
+                      and (:departmentId is null or d.id = :departmentId)
                       and (:evaluateeId is null or ee.id = :evaluateeId)
                       and (:evaluatorUserId is null or eu.id = :evaluatorUserId)
                       and (:grade is null or r.grade = :grade)
                     """)
     Page<EvaluationRecord> findResultDetails(
+            @Param("evaluationPeriodId") Long evaluationPeriodId,
             @Param("departmentId") Long departmentId,
             @Param("evaluateeId") Long evaluateeId,
             @Param("evaluatorUserId") Long evaluatorUserId,

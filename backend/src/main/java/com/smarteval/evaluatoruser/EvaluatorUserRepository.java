@@ -28,11 +28,13 @@ public interface EvaluatorUserRepository extends JpaRepository<EvaluatorUser, Lo
 
     @Query("""
             select e from EvaluatorUser e
-            where (:departmentId is null or e.department.id = :departmentId)
+            where e.evaluationPeriodId = :evaluationPeriodId
+              and (:departmentId is null or e.department.id = :departmentId)
               and (:submitted is null or e.submitted = :submitted)
               and (:enabled is null or e.enabled = :enabled)
             """)
     Page<EvaluatorUser> search(
+            @Param("evaluationPeriodId") Long evaluationPeriodId,
             @Param("departmentId") Long departmentId,
             @Param("submitted") Boolean submitted,
             @Param("enabled") Boolean enabled,
@@ -41,12 +43,14 @@ public interface EvaluatorUserRepository extends JpaRepository<EvaluatorUser, Lo
 
     @Query("""
             select e from EvaluatorUser e
-            where (:departmentId is null or e.department.id = :departmentId)
+            where e.evaluationPeriodId = :evaluationPeriodId
+              and (:departmentId is null or e.department.id = :departmentId)
               and (:submitted is null or e.submitted = :submitted)
               and (:enabled is null or e.enabled = :enabled)
             order by e.id asc
             """)
     List<EvaluatorUser> findForPrint(
+            @Param("evaluationPeriodId") Long evaluationPeriodId,
             @Param("departmentId") Long departmentId,
             @Param("submitted") Boolean submitted,
             @Param("enabled") Boolean enabled

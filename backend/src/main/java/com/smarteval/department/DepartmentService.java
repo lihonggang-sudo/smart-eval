@@ -45,7 +45,13 @@ public class DepartmentService {
     public PageResponse<DepartmentListItem> list(CurrentUser currentUser, int page, int pageSize, String name) {
         authService.requireEnabledAdmin(currentUser);
 
-        var departments = departmentRepository.findByNameContaining(
+        Long periodId = EvaluationPeriodContext.getCurrentPeriodId();
+        if (periodId == null) {
+            throw new BusinessException("当前批次未设置");
+        }
+
+        var departments = departmentRepository.findByEvaluationPeriodIdAndNameContaining(
+                periodId,
                 name == null ? "" : name,
                 PageRequest.of(page - 1, pageSize, Sort.by(Sort.Direction.ASC, "sortOrder", "id"))
         );

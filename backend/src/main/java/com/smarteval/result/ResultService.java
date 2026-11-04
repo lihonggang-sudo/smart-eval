@@ -1,9 +1,11 @@
 package com.smarteval.result;
 
 import com.smarteval.auth.AuthService;
+import com.smarteval.common.BusinessException;
 import com.smarteval.common.PageResponse;
 import com.smarteval.evaluation.EvaluationGrade;
 import com.smarteval.evaluation.EvaluationRecordRepository;
+import com.smarteval.evaluationperiod.EvaluationPeriodContext;
 import com.smarteval.result.dto.ResultDetailItem;
 import com.smarteval.result.dto.ResultSummaryItem;
 import com.smarteval.security.CurrentUser;
@@ -31,7 +33,13 @@ public class ResultService {
     ) {
         authService.requireEnabledAdmin(currentUser);
 
+        Long periodId = EvaluationPeriodContext.getCurrentPeriodId();
+        if (periodId == null) {
+            throw new BusinessException("当前批次未设置");
+        }
+
         var resultPage = evaluationRecordRepository.findResultSummaries(
+                periodId,
                 departmentId,
                 normalizeTextFilter(evaluateeName),
                 PageRequest.of(page - 1, pageSize)
@@ -51,7 +59,13 @@ public class ResultService {
     ) {
         authService.requireEnabledAdmin(currentUser);
 
+        Long periodId = EvaluationPeriodContext.getCurrentPeriodId();
+        if (periodId == null) {
+            throw new BusinessException("当前批次未设置");
+        }
+
         var resultPage = evaluationRecordRepository.findResultDetails(
+                periodId,
                 departmentId,
                 evaluateeId,
                 evaluatorUserId,

@@ -58,7 +58,13 @@ public class EvaluatorUserService {
     ) {
         authService.requireEnabledAdmin(currentUser);
 
+        Long periodId = EvaluationPeriodContext.getCurrentPeriodId();
+        if (periodId == null) {
+            throw new BusinessException("当前批次未设置");
+        }
+
         var evaluatorUsers = evaluatorUserRepository.search(
+                periodId,
                 departmentId,
                 submitted,
                 enabled,
@@ -144,7 +150,12 @@ public class EvaluatorUserService {
     ) {
         authService.requireEnabledAdmin(currentUser);
 
-        return evaluatorUserRepository.findForPrint(departmentId, submitted, enabled)
+        Long periodId = EvaluationPeriodContext.getCurrentPeriodId();
+        if (periodId == null) {
+            throw new BusinessException("当前批次未设置");
+        }
+
+        return evaluatorUserRepository.findForPrint(periodId, departmentId, submitted, enabled)
                 .stream()
                 .map(this::toListItem)
                 .toList();

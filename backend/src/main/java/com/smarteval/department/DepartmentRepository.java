@@ -11,5 +11,7 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     Page<Department> findByNameContaining(String name, Pageable pageable);
 
+    Page<Department> findByEvaluationPeriodIdAndNameContaining(Long evaluationPeriodId, String name, Pageable pageable);
+
     boolean existsByEvaluationPeriodId(Long evaluationPeriodId);
 }
