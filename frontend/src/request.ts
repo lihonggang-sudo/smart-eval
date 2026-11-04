@@ -11,6 +11,12 @@ export async function request<T>(url: string, options: RequestInit = {}): Promis
     ...(options.headers as Record<string, string> ?? {}),
   };
 
+  // Add authorization token
+  const token = localStorage.getItem('token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   // Add evaluation period header for admin requests
   if (url.startsWith('/api/admin/') && !url.includes('/auth/login')) {
     try {
