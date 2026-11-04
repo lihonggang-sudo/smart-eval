@@ -19,6 +19,7 @@ import {
   type Evaluatee,
   type EvaluateePayload
 } from '../../services/evaluatees';
+import { usePeriodStore } from '../../stores/periodStore';
 
 function parseBoolean(value: unknown): boolean | undefined {
   if (typeof value === 'boolean') {
@@ -38,6 +39,7 @@ export default function Evaluatees() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Evaluatee | null>(null);
+  const { currentPeriod } = usePeriodStore();
 
   useEffect(() => {
     void listDepartments({ page: 1, pageSize: 200 })
@@ -48,6 +50,11 @@ export default function Evaluatees() {
         message.error('部门列表加载失败，请稍后重试');
       });
   }, []);
+
+  // Refresh data when period changes
+  useEffect(() => {
+    actionRef.current?.reload();
+  }, [currentPeriod]);
 
   const departmentOptions = useMemo(
     () => departments.map((department) => ({ label: department.name, value: department.id })),

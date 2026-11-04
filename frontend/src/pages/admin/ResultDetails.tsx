@@ -1,6 +1,6 @@
 import { ProTable, type ProColumns } from '@ant-design/pro-components';
 import { message } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { listDepartments, type Department } from '../../services/departments';
 import { listEvaluatees, type Evaluatee } from '../../services/evaluatees';
 import { listEvaluatorUsers, type EvaluatorUser } from '../../services/evaluatorUsers';
@@ -9,6 +9,7 @@ import {
   type EvaluationGrade,
   type ResultDetail
 } from '../../services/results';
+import { usePeriodStore } from '../../stores/periodStore';
 
 const gradeValueEnum: Record<EvaluationGrade, { text: string }> = {
   EXCELLENT: { text: '优秀' },
@@ -32,6 +33,8 @@ export default function ResultDetails() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [evaluatees, setEvaluatees] = useState<Evaluatee[]>([]);
   const [evaluatorUsers, setEvaluatorUsers] = useState<EvaluatorUser[]>([]);
+  const actionRef = useRef();
+  const { currentPeriod } = usePeriodStore();
 
   useEffect(() => {
     void Promise.all([
@@ -48,6 +51,13 @@ export default function ResultDetails() {
         message.error('筛选条件加载失败，请稍后重试');
       });
   }, []);
+
+  // Refresh data when period changes
+  useEffect(() => {
+    if (actionRef.current) {
+      (actionRef.current as any).reload?.();
+    }
+  }, [currentPeriod]);
 
   const departmentValueEnum = useMemo(
     () =>

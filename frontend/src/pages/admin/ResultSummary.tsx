@@ -1,8 +1,9 @@
 import { ProTable, type ProColumns } from '@ant-design/pro-components';
 import { message } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { listDepartments, type Department } from '../../services/departments';
 import { getResultSummary, type ResultSummary as ResultSummaryRecord } from '../../services/results';
+import { usePeriodStore } from '../../stores/periodStore';
 
 function parseNumber(value: unknown): number | undefined {
   if (typeof value === 'number') {
@@ -17,6 +18,8 @@ function parseNumber(value: unknown): number | undefined {
 
 export default function ResultSummary() {
   const [departments, setDepartments] = useState<Department[]>([]);
+  const actionRef = useRef();
+  const { currentPeriod } = usePeriodStore();
 
   useEffect(() => {
     void listDepartments({ page: 1, pageSize: 200 })
@@ -27,6 +30,13 @@ export default function ResultSummary() {
         message.error('部门列表加载失败，请稍后重试');
       });
   }, []);
+
+  // Refresh data when period changes
+  useEffect(() => {
+    if (actionRef.current) {
+      (actionRef.current as any).reload?.();
+    }
+  }, [currentPeriod]);
 
   const departmentValueEnum = useMemo(
     () =>

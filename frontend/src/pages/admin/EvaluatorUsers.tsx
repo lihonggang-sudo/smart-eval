@@ -20,6 +20,7 @@ import {
   type EvaluatorUser,
   type EvaluatorUserListParams
 } from '../../services/evaluatorUsers';
+import { usePeriodStore } from '../../stores/periodStore';
 
 function parseBoolean(value: unknown): boolean | undefined {
   if (typeof value === 'boolean') {
@@ -39,6 +40,7 @@ export default function EvaluatorUsers() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [generateOpen, setGenerateOpen] = useState(false);
   const [filters, setFilters] = useState<Omit<EvaluatorUserListParams, 'page' | 'pageSize'>>({});
+  const { currentPeriod } = usePeriodStore();
 
   useEffect(() => {
     void listDepartments({ page: 1, pageSize: 200 })
@@ -49,6 +51,11 @@ export default function EvaluatorUsers() {
         message.error('部门列表加载失败，请稍后重试');
       });
   }, []);
+
+  // Refresh data when period changes
+  useEffect(() => {
+    actionRef.current?.reload();
+  }, [currentPeriod]);
 
   const departmentOptions = useMemo(
     () => departments.map((department) => ({ label: department.name, value: department.id })),
