@@ -47,6 +47,9 @@ public class EvaluationRecord {
     @Column(length = 255)
     private String comment2;
 
+    @Column(name = "evaluation_period_id", nullable = false)
+    private Long evaluationPeriodId;
+
     @Column(name = "created_at", nullable = false)
     @CreationTimestamp
     private OffsetDateTime createdAt;
@@ -94,5 +97,13 @@ public class EvaluationRecord {
 
     public OffsetDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public Long getEvaluationPeriodId() {
+        return evaluationPeriodId;
+    }
+
+    public void setEvaluationPeriodId(Long evaluationPeriodId) {
+        this.evaluationPeriodId = evaluationPeriodId;
     }
 }

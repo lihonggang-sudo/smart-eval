@@ -24,6 +24,9 @@ public class Department {
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
 
+    @Column(name = "evaluation_period_id", nullable = false)
+    private Long evaluationPeriodId;
+
     @Column(name = "created_at", nullable = false)
     @CreationTimestamp
     private OffsetDateTime createdAt;
@@ -63,5 +66,13 @@ public class Department {
 
     public OffsetDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Long getEvaluationPeriodId() {
+        return evaluationPeriodId;
+    }
+
+    public void setEvaluationPeriodId(Long evaluationPeriodId) {
+        this.evaluationPeriodId = evaluationPeriodId;
     }
 }

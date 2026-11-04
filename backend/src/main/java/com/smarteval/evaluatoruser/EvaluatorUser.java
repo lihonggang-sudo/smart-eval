@@ -41,6 +41,9 @@ public class EvaluatorUser {
     @Column(name = "submitted_at")
     private OffsetDateTime submittedAt;
 
+    @Column(name = "evaluation_period_id", nullable = false)
+    private Long evaluationPeriodId;
+
     @Column(name = "created_at", nullable = false)
     @CreationTimestamp
     private OffsetDateTime createdAt;
@@ -113,5 +116,13 @@ public class EvaluatorUser {
     public void markSubmitted(OffsetDateTime submittedAt) {
         this.submitted = true;
         this.submittedAt = submittedAt;
+    }
+
+    public Long getEvaluationPeriodId() {
+        return evaluationPeriodId;
+    }
+
+    public void setEvaluationPeriodId(Long evaluationPeriodId) {
+        this.evaluationPeriodId = evaluationPeriodId;
     }
 }
