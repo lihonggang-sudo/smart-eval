@@ -5,11 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import AdminCopyright from '../../components/AdminCopyright';
 import { adminLogin } from '../../services/auth';
 import { saveToken } from '../../services/session';
+import { usePeriodStore } from '../../stores/periodStore';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const { setCurrentPeriod } = usePeriodStore();
 
   async function handleFinish(values: { username: string; password: string }) {
     setSubmitting(true);
@@ -18,6 +20,9 @@ export default function AdminLogin() {
     try {
       const result = await adminLogin(values.username, values.password);
       saveToken(result.token);
+      if (result.latestPeriod) {
+        setCurrentPeriod(result.latestPeriod);
+      }
       navigate('/admin');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '登录失败');

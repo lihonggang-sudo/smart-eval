@@ -14,9 +14,15 @@ export type MobileMe = {
   submitted: boolean;
 };
 
+export type LatestPeriod = {
+  id: number;
+  name: string;
+} | null;
+
 export type LoginResult<TUser> = {
   token: string;
   user: TUser;
+  latestPeriod: LatestPeriod;
 };
 
 export function adminLogin(username: string, password: string) {

@@ -26,6 +26,7 @@ import ConfirmPage from './pages/mobile/ConfirmPage';
 import EvaluationPage from './pages/mobile/EvaluationPage';
 import MobileLogin from './pages/mobile/Login';
 import AdminCopyright from './components/AdminCopyright';
+import PeriodSelector from './components/PeriodSelector';
 import { clearToken } from './services/session';
 
 function AdminBrandHeader({ collapsed }: { collapsed?: boolean }) {
@@ -105,6 +106,7 @@ function AdminShell() {
     <div data-testid="admin-layout">
       <ProLayout
         actionsRender={() => [
+          <PeriodSelector key="period" />,
           <Button
             key="logout"
             aria-label="退出系统"
