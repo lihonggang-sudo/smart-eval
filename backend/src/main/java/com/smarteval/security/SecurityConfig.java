@@ -1,5 +1,6 @@
 package com.smarteval.security;
 
+import com.smarteval.evaluationperiod.EvaluationPeriodFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,6 +21,7 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TokenAuthenticationFilter tokenFilter,
+            EvaluationPeriodFilter evaluationPeriodFilter,
             ApiAuthenticationEntryPoint authenticationEntryPoint,
             ApiAccessDeniedHandler accessDeniedHandler
     ) throws Exception {
@@ -47,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/mobile/**").hasAuthority("EVALUATOR")
                         .anyRequest().authenticated())
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(evaluationPeriodFilter, TokenAuthenticationFilter.class)
                 .build();
     }
 
