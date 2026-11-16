@@ -91,6 +91,11 @@ export default function ResultSummary() {
       columns={columns}
       headerTitle="结果汇总"
       rowKey="evaluateeId"
+      pagination={{
+        pageSize: 20,
+        showSizeChanger: true,
+        pageSizeOptions: ['10', '20', '50', '100', '500', '5000', '10000'],
+      }}
       request={async (params) => {
         const response = await getResultSummary({
           page: params.current,

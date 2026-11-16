@@ -145,6 +145,11 @@ export default function ResultDetails() {
       columns={columns}
       headerTitle="评价明细"
       rowKey={(record) => `${record.evaluatorUserId}-${record.evaluateeId}-${record.createdAt}`}
+      pagination={{
+        pageSize: 20,
+        showSizeChanger: true,
+        pageSizeOptions: ['10', '20', '50', '100', '500', '5000', '10000'],
+      }}
       request={async (params) => {
         const response = await getResultDetails({
           page: params.current,
