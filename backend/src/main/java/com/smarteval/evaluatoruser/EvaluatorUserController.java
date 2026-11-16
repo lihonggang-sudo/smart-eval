@@ -10,6 +10,7 @@ import com.smarteval.evaluatoruser.dto.SetEnabledRequest;
 import com.smarteval.security.CurrentUser;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -61,5 +62,14 @@ public class EvaluatorUserController {
             @RequestBody SetEnabledRequest request
     ) {
         return ApiResponse.ok(evaluatorUserService.setEnabled(currentUser, id, request));
+    }
+
+    @DeleteMapping("/api/admin/evaluator-users/{id}")
+    public ApiResponse<Void> delete(
+            @AuthenticationPrincipal CurrentUser currentUser,
+            @PathVariable Long id
+    ) {
+        evaluatorUserService.delete(currentUser, id);
+        return ApiResponse.ok(null);
     }
 }

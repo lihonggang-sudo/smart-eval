@@ -1,4 +1,4 @@
-import { KeyOutlined, PrinterOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, KeyOutlined, PrinterOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   ModalForm,
   ProFormDigit,
@@ -7,11 +7,12 @@ import {
   type ActionType,
   type ProColumns
 } from '@ant-design/pro-components';
-import { Button, Space, Tag, message } from 'antd';
+import { Button, Modal, Space, Tag, message } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { listDepartments, type Department } from '../../services/departments';
 import {
   batchGenerateEvaluatorUsers,
+  deleteEvaluatorUser,
   fetchEvaluatorUsersPrintHtml,
   listEvaluatorUsers,
   resetEvaluatorPassword,
@@ -125,7 +126,7 @@ export default function EvaluatorUsers() {
       title: '操作',
       key: 'actions',
       valueType: 'option',
-      width: 280,
+      width: 340,
       render: (_, record) => [
         <Button
           key="reset"
@@ -149,6 +150,32 @@ export default function EvaluatorUsers() {
           }}
         >
           {record.enabled ? '禁用' : '启用'}
+        </Button>,
+        <Button
+          key="delete"
+          icon={<DeleteOutlined />}
+          type="link"
+          danger
+          onClick={() => {
+            Modal.confirm({
+              title: '确认删除',
+              content: `确定要删除测评用户"${record.username}"吗？此操作不可恢复。`,
+              okText: '确定',
+              okType: 'danger',
+              cancelText: '取消',
+              onOk: async () => {
+                try {
+                  await deleteEvaluatorUser(record.id);
+                  message.success('删除成功');
+                  actionRef.current?.reload();
+                } catch (error) {
+                  message.error('删除失败，请稍后重试');
+                }
+              }
+            });
+          }}
+        >
+          删除
         </Button>
       ]
     }

@@ -1,4 +1,4 @@
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   ModalForm,
   ProFormSelect,
@@ -8,11 +8,12 @@ import {
   type ActionType,
   type ProColumns
 } from '@ant-design/pro-components';
-import { Button, Tag, message } from 'antd';
+import { Button, Modal, Tag, message } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { listDepartments, type Department } from '../../services/departments';
 import {
   createEvaluatee,
+  deleteEvaluatee,
   listEvaluatees,
   setEvaluateeEnabled,
   updateEvaluatee,
@@ -105,7 +106,7 @@ export default function Evaluatees() {
       title: '操作',
       key: 'actions',
       valueType: 'option',
-      width: 220,
+      width: 280,
       render: (_, record) => [
         <Button
           key="edit"
@@ -128,6 +129,32 @@ export default function Evaluatees() {
           }}
         >
           {record.enabled ? '禁用' : '启用'}
+        </Button>,
+        <Button
+          key="delete"
+          icon={<DeleteOutlined />}
+          type="link"
+          danger
+          onClick={() => {
+            Modal.confirm({
+              title: '确认删除',
+              content: `确定要删除被测评人员"${record.name}"吗？此操作不可恢复。`,
+              okText: '确定',
+              okType: 'danger',
+              cancelText: '取消',
+              onOk: async () => {
+                try {
+                  await deleteEvaluatee(record.id);
+                  message.success('删除成功');
+                  actionRef.current?.reload();
+                } catch (error) {
+                  message.error('删除失败，请稍后重试');
+                }
+              }
+            });
+          }}
+        >
+          删除
         </Button>
       ]
     }

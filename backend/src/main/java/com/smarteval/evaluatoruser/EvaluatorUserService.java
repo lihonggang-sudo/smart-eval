@@ -141,6 +141,14 @@ public class EvaluatorUserService {
         return toListItem(evaluatorUser);
     }
 
+    @Transactional
+    public void delete(CurrentUser currentUser, Long id) {
+        authService.requireEnabledAdmin(currentUser);
+
+        EvaluatorUser evaluatorUser = getRequiredEvaluatorUser(id);
+        evaluatorUserRepository.delete(evaluatorUser);
+    }
+
     @Transactional(readOnly = true)
     public List<EvaluatorUserListItem> listForPrint(
             CurrentUser currentUser,

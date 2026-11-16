@@ -55,6 +55,10 @@ export function setEvaluatorUserEnabled(id: number, enabled: boolean) {
   return apiSend<EvaluatorUser>(`/api/admin/evaluator-users/${id}/enabled`, 'PUT', { enabled });
 }
 
+export function deleteEvaluatorUser(id: number) {
+  return apiSend<void>(`/api/admin/evaluator-users/${id}`, 'DELETE');
+}
+
 export function printEvaluatorUsersUrl(params: Omit<EvaluatorUserListParams, 'page' | 'pageSize'> = {}) {
   return `/api/admin/evaluator-users/print${buildQuery(params)}`;
 }
