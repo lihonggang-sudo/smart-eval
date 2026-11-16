@@ -8,7 +8,7 @@ import {
   type ProColumns
 } from '@ant-design/pro-components';
 import { Button, Popconfirm, message } from 'antd';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import {
   createDepartment,
   deleteDepartment,
@@ -17,19 +17,11 @@ import {
   type Department,
   type DepartmentPayload
 } from '../../services/departments';
-import { usePeriodStore } from '../../stores/periodStore';
 
 export default function Departments() {
   const actionRef = useRef<ActionType>();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Department | null>(null);
-  const { currentPeriod } = usePeriodStore();
-
-  // Refresh data when period changes
-  useEffect(() => {
-    actionRef.current?.reload();
-  }, [currentPeriod]);
-
   const columns: ProColumns<Department>[] = [
     {
       title: '部门名称',

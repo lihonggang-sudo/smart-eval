@@ -46,12 +46,14 @@ class SchemaMigrationTest extends PostgresIntegrationTest {
         assertColumnExists("evaluator_user", "submitted_at");
         assertColumnExists("evaluation_record", "comment1");
         assertColumnExists("evaluation_record", "comment2");
+        assertColumnMissing("department", "evaluation_period_id");
 
         assertUniqueConstraintExists("admin_user", "uk_admin_user_username", "username");
         assertUniqueConstraintExists("department", "uk_department_name", "name");
-        assertUniqueConstraintExists("evaluator_user", "uk_evaluator_user_username", "username");
-        assertUniqueConstraintExists("evaluation_record", "uk_evaluation_record_user_evaluatee",
-                "evaluator_user_id", "evaluatee_id");
+        assertUniqueConstraintExists("evaluator_user", "uk_evaluator_user_period_username",
+                "evaluation_period_id", "username");
+        assertUniqueConstraintExists("evaluation_record", "uk_evaluation_record_period_user_evaluatee",
+                "evaluation_period_id", "evaluator_user_id", "evaluatee_id");
 
         assertForeignKeyExists("evaluatee", "department_id", "department", "id");
         assertForeignKeyExists("evaluator_user", "department_id", "department", "id");
@@ -116,6 +118,16 @@ class SchemaMigrationTest extends PostgresIntegrationTest {
                   and table_name = ?
                   and column_name = ?
                 """, tableName, columnName)).isEqualTo(1);
+    }
+
+    private void assertColumnMissing(String tableName, String columnName) {
+        assertThat(count("""
+                select count(*)
+                from information_schema.columns
+                where table_schema = 'public'
+                  and table_name = ?
+                  and column_name = ?
+                """, tableName, columnName)).isZero();
     }
 
     private void assertUniqueConstraintExists(String tableName, String constraintName, String... columnNames) {

@@ -7,7 +7,6 @@ import com.smarteval.department.dto.DepartmentListItem;
 import com.smarteval.department.dto.DepartmentRequest;
 import com.smarteval.evaluation.EvaluationRecordRepository;
 import com.smarteval.evaluatee.EvaluateeRepository;
-import com.smarteval.evaluationperiod.EvaluationPeriodContext;
 import com.smarteval.evaluatoruser.EvaluatorUserRepository;
 import com.smarteval.security.CurrentUser;
 import org.springframework.data.domain.PageRequest;
@@ -45,13 +44,7 @@ public class DepartmentService {
     public PageResponse<DepartmentListItem> list(CurrentUser currentUser, int page, int pageSize, String name) {
         authService.requireEnabledAdmin(currentUser);
 
-        Long periodId = EvaluationPeriodContext.getCurrentPeriodId();
-        if (periodId == null) {
-            throw new BusinessException("当前批次未设置");
-        }
-
-        var departments = departmentRepository.findByEvaluationPeriodIdAndNameContaining(
-                periodId,
+        var departments = departmentRepository.findByNameContaining(
                 name == null ? "" : name,
                 PageRequest.of(page - 1, pageSize, Sort.by(Sort.Direction.ASC, "sortOrder", "id"))
         );
@@ -67,17 +60,11 @@ public class DepartmentService {
     public DepartmentListItem create(CurrentUser currentUser, DepartmentRequest request) {
         authService.requireEnabledAdmin(currentUser);
 
-        Long periodId = EvaluationPeriodContext.getCurrentPeriodId();
-        if (periodId == null) {
-            throw new BusinessException("当前批次未设置");
-        }
-
         if (departmentRepository.existsByName(request.name())) {
             throw new BusinessException(DUPLICATE_NAME_MESSAGE);
         }
 
         Department department = new Department(request.name(), request.sortOrder());
-        department.setEvaluationPeriodId(periodId);
         return toListItem(departmentRepository.save(department));
     }
 

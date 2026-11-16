@@ -1,7 +1,6 @@
 package com.smarteval.evaluationperiod;
 
 import com.smarteval.common.BusinessException;
-import com.smarteval.department.DepartmentRepository;
 import com.smarteval.evaluatee.EvaluateeRepository;
 import com.smarteval.evaluation.EvaluationRecordRepository;
 import com.smarteval.evaluatoruser.EvaluatorUserRepository;
@@ -14,20 +13,17 @@ import java.util.Optional;
 @Service
 public class EvaluationPeriodService {
     private final EvaluationPeriodRepository repository;
-    private final DepartmentRepository departmentRepository;
     private final EvaluateeRepository evaluateeRepository;
     private final EvaluatorUserRepository evaluatorUserRepository;
     private final EvaluationRecordRepository evaluationRecordRepository;
 
     public EvaluationPeriodService(
             EvaluationPeriodRepository repository,
-            DepartmentRepository departmentRepository,
             EvaluateeRepository evaluateeRepository,
             EvaluatorUserRepository evaluatorUserRepository,
             EvaluationRecordRepository evaluationRecordRepository
     ) {
         this.repository = repository;
-        this.departmentRepository = departmentRepository;
         this.evaluateeRepository = evaluateeRepository;
         this.evaluatorUserRepository = evaluatorUserRepository;
         this.evaluationRecordRepository = evaluationRecordRepository;
@@ -56,8 +52,7 @@ public class EvaluationPeriodService {
             throw new BusinessException("不能删除最后一个批次");
         }
 
-        boolean hasData = departmentRepository.existsByEvaluationPeriodId(id)
-                || evaluateeRepository.existsByEvaluationPeriodId(id)
+        boolean hasData = evaluateeRepository.existsByEvaluationPeriodId(id)
                 || evaluatorUserRepository.existsByEvaluationPeriodId(id)
                 || evaluationRecordRepository.existsByEvaluationPeriodId(id);
 
