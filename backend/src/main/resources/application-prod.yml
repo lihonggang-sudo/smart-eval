@@ -1,0 +1,11 @@
+# 生产环境通过环境变量注入，避免把连接信息和密钥写进代码库。
+# 运行前请设置 DB_URL、DB_USERNAME、DB_PASSWORD、JWT_SECRET。
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}

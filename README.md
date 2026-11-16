@@ -35,3 +35,6 @@ npm exec playwright test
 ```
 
 The current Playwright spec is route-rendering only. It checks `/admin/login` and `/mobile/login` without requiring seeded credentials.
+
+## 任务清单
+
