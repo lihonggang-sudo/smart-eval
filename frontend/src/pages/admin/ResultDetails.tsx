@@ -146,7 +146,7 @@ export default function ResultDetails() {
       headerTitle="评价明细"
       rowKey={(record) => `${record.evaluatorUserId}-${record.evaluateeId}-${record.createdAt}`}
       pagination={{
-        pageSize: 20,
+        defaultPageSize: 20,
         showSizeChanger: true,
         pageSizeOptions: ['10', '20', '50', '100', '500', '5000', '10000'],
       }}
