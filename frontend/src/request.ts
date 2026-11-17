@@ -36,7 +36,23 @@ export async function request<T>(url: string, options: RequestInit = {}): Promis
     ...options,
     headers,
   });
-  const body = (await response.json()) as ApiResponse<T>;
+
+  // Handle 204 No Content and other empty responses
+  const text = await response.text();
+  if (!text) {
+    if (!response.ok) {
+      throw new Error('请求失败');
+    }
+    return undefined as T;
+  }
+
+  let body: ApiResponse<T>;
+  try {
+    body = JSON.parse(text) as ApiResponse<T>;
+  } catch {
+    throw new Error(response.ok ? '响应格式错误' : '请求失败');
+  }
+
   if (!response.ok || !body.success) {
     throw new Error(body.message || '请求失败');
   }
